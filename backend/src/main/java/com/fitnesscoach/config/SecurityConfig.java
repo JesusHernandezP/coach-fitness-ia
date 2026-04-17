@@ -1,7 +1,7 @@
 package com.fitnesscoach.config;
 
 import com.fitnesscoach.security.JwtAuthFilter;
-import com.fitnesscoach.user.UserRepository;
+import com.fitnesscoach.user.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -13,8 +13,6 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -30,7 +28,7 @@ import java.util.List;
 public class SecurityConfig {
 
   private final JwtAuthFilter jwtAuthFilter;
-  private final UserRepository userRepository;
+  private final UserDetailsServiceImpl userDetailsService;
 
   @Value("${app.cors.allowed-origins}")
   private String allowedOrigins;
@@ -71,17 +69,9 @@ public class SecurityConfig {
   }
 
   @Bean
-  public UserDetailsService userDetailsService() {
-    return username ->
-        userRepository
-            .findByEmail(username)
-            .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-  }
-
-  @Bean
   public AuthenticationProvider authenticationProvider() {
     DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-    provider.setUserDetailsService(userDetailsService());
+    provider.setUserDetailsService(userDetailsService);
     provider.setPasswordEncoder(passwordEncoder());
     return provider;
   }
