@@ -1,0 +1,112 @@
+// ── Tokens ──────────────────────────────────────────────
+:root {
+  --bg:       #0f0f0f;
+  --surface:  #1a1a1a;
+  --surface2: #242424;
+  --border:   #2e2e2e;
+  --accent:   #d4b200;
+  --accent-hover: #f0ca00;
+  --text:     #f0f0f0;
+  --text-muted: #888;
+  --danger:   #e05252;
+  --radius:   12px;
+}
+
+// ── Reset ────────────────────────────────────────────────
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+// ── Typography ───────────────────────────────────────────
+h1 { font-size: 1.75rem; font-weight: 700; }
+h2 { font-size: 1.25rem; font-weight: 600; }
+h3 { font-size: 1rem;    font-weight: 600; }
+
+// ── Cards ────────────────────────────────────────────────
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+}
+
+// ── Buttons ──────────────────────────────────────────────
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+
+  &:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  &-primary {
+    background: var(--accent);
+    color: #000;
+    &:hover:not(:disabled) { background: var(--accent-hover); }
+  }
+
+  &-danger {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    &:hover:not(:disabled) { background: rgba(224, 82, 82, 0.1); }
+  }
+
+  &-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    &:hover:not(:disabled) { color: var(--text); }
+  }
+}
+
+// ── Inputs ───────────────────────────────────────────────
+.input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 0.6rem 0.875rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus { border-color: var(--accent); }
+  &::placeholder { color: var(--text-muted); }
+}
+
+select.input option { background: var(--surface2); }
+
+// ── Labels ───────────────────────────────────────────────
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+// ── Accent text ──────────────────────────────────────────
+.text-accent { color: var(--accent); }
+.text-muted  { color: var(--text-muted); }
+
+// ── Scrollbar ────────────────────────────────────────────
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
