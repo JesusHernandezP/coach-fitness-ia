@@ -53,7 +53,7 @@ public class ProfileService {
             .orElseThrow(() -> new EntityNotFoundException("Perfil no configurado aun")));
   }
 
-  void recalculateTargets(User user, MetabolicProfile profile) {
+  public void recalculateTargets(User user, MetabolicProfile profile) {
     NutritionCalculatorService.NutritionResult result = calculator.calculate(profile);
     NutritionTarget target =
         targetRepo.findByUserId(user.getId()).orElse(NutritionTarget.builder().user(user).build());
