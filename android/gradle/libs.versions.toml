@@ -17,6 +17,8 @@ vico                 = "2.0.0-beta.2"
 junit                = "4.13.2"
 junitExt             = "1.2.1"
 espressoCore         = "3.6.1"
+mockitoKotlin        = "5.4.0"
+coroutinesTest       = "1.8.1"
 
 [libraries]
 # Core
@@ -56,6 +58,8 @@ vico-compose-m3              = { group = "com.patrykandpatrick.vico", name = "co
 
 # Test
 junit                        = { group = "junit",                    name = "junit",                        version.ref = "junit" }
+mockito-kotlin               = { group = "org.mockito.kotlin",       name = "mockito-kotlin",               version.ref = "mockitoKotlin" }
+kotlinx-coroutines-test      = { group = "org.jetbrains.kotlinx",    name = "kotlinx-coroutines-test",      version.ref = "coroutinesTest" }
 androidx-junit                = { group = "androidx.test.ext",       name = "junit",                        version.ref = "junitExt" }
 androidx-espresso-core       = { group = "androidx.test.espresso",   name = "espresso-core",                version.ref = "espressoCore" }
 androidx-ui-test-manifest    = { group = "androidx.compose.ui",      name = "ui-test-manifest" }
