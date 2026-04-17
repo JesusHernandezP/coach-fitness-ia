@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: fitness-ai-coach
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+  sql:
+    init:
+      mode: never
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  docs:
+    enabled: ${APP_DOCS_ENABLED:true}
+  groq:
+    api-key: ${GROQ_API_KEY:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+springdoc:
+  swagger-ui:
+    enabled: ${APP_DOCS_ENABLED:true}
+  api-docs:
+    enabled: ${APP_DOCS_ENABLED:true}
+
+server:
+  port: 8080
