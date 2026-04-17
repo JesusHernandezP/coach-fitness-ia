@@ -1,5 +1,6 @@
 package com.fitnesscoach.exception;
 
+import com.fitnesscoach.chat.RateLimitException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
@@ -40,6 +41,12 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleNotFound(
       EntityNotFoundException ex, HttpServletRequest req) {
     return build(HttpStatus.NOT_FOUND, ex.getMessage(), req.getRequestURI());
+  }
+
+  @ExceptionHandler(RateLimitException.class)
+  public ResponseEntity<ErrorResponse> handleRateLimit(
+      RateLimitException ex, HttpServletRequest req) {
+    return build(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), req.getRequestURI());
   }
 
   @ExceptionHandler(Exception.class)
