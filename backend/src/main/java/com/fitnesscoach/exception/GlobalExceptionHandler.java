@@ -1,5 +1,6 @@
 package com.fitnesscoach.exception;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.stream.Collectors;
@@ -33,6 +34,12 @@ public class GlobalExceptionHandler {
             .map(FieldError::getDefaultMessage)
             .collect(Collectors.joining("; "));
     return build(HttpStatus.BAD_REQUEST, message, req.getRequestURI());
+  }
+
+  @ExceptionHandler(EntityNotFoundException.class)
+  public ResponseEntity<ErrorResponse> handleNotFound(
+      EntityNotFoundException ex, HttpServletRequest req) {
+    return build(HttpStatus.NOT_FOUND, ex.getMessage(), req.getRequestURI());
   }
 
   @ExceptionHandler(Exception.class)
