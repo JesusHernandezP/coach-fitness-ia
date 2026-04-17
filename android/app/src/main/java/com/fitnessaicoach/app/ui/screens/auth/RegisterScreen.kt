@@ -45,7 +45,7 @@ fun RegisterScreen(
     LaunchedEffect(uiState) {
         if (uiState is UiState.Success) {
             viewModel.resetState()
-            navController.navigate(Screen.Dashboard.route) {
+            navController.navigate(Screen.ProfileOnboarding.route) {
                 popUpTo(Screen.Register.route) { inclusive = true }
             }
         }

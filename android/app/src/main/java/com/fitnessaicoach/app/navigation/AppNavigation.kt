@@ -4,10 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -25,11 +27,12 @@ import com.fitnessaicoach.app.ui.theme.Surface
 import com.fitnessaicoach.app.ui.theme.TextMuted
 
 sealed class Screen(val route: String) {
-    object Login    : Screen("login")
-    object Register : Screen("register")
-    object Dashboard: Screen("dashboard")
-    object Chat     : Screen("chat")
-    object Profile  : Screen("profile")
+    object Login             : Screen("login")
+    object Register          : Screen("register")
+    object Dashboard         : Screen("dashboard")
+    object Chat              : Screen("chat")
+    object Profile           : Screen("profile")
+    object ProfileOnboarding : Screen("profile-onboarding")
 }
 
 data class BottomNavItem(
@@ -91,11 +94,12 @@ fun AppNavigation(isLoggedIn: Boolean) {
             startDestination = startDest,
             modifier         = androidx.compose.ui.Modifier.padding(padding),
         ) {
-            composable(Screen.Login.route)    { LoginScreen(navController) }
-            composable(Screen.Register.route) { RegisterScreen(navController) }
-            composable(Screen.Dashboard.route){ DashboardScreen(navController) }
-            composable(Screen.Chat.route)     { ChatScreen(navController) }
-            composable(Screen.Profile.route)  { ProfileScreen(navController) }
+            composable(Screen.Login.route)             { LoginScreen(navController) }
+            composable(Screen.Register.route)          { RegisterScreen(navController) }
+            composable(Screen.Dashboard.route)         { DashboardScreen(navController) }
+            composable(Screen.Chat.route)              { ChatScreen(navController) }
+            composable(Screen.Profile.route)           { ProfileScreen(navController) }
+            composable(Screen.ProfileOnboarding.route) { ProfileScreen(navController, forceOnboarding = true) }
         }
     }
 }
