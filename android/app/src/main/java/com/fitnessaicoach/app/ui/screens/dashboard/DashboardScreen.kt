@@ -18,7 +18,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.DirectionsRun
+import androidx.compose.material.icons.filled.MonitorWeight
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -42,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.fitnessaicoach.app.navigation.Screen
 import com.fitnessaicoach.app.data.network.TodaySnapshot
 import com.fitnessaicoach.app.data.network.WeightPoint
 import com.fitnessaicoach.app.data.network.WeeklySummary
@@ -148,6 +154,10 @@ private fun DashboardContentView(
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         DashboardHeader()
+        DashboardQuickActions(
+            onLogWeight = { navController.navigate(Screen.LogWeight.route) },
+            onLogActivity = { navController.navigate(Screen.LogActivity.route) },
+        )
         WeightProgressCard(content.weightProgress)
         WeeklySummaryCard(content.weeklySummary)
         TodaySummarySection(content.todaySnapshot, content.weeklySummary)
@@ -185,6 +195,48 @@ private fun DashboardHeader() {
             )
         }
         Text("T17", color = Gold.copy(alpha = 0.45f), fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun DashboardQuickActions(
+    onLogWeight: () -> Unit,
+    onLogActivity: () -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        QuickFab(
+            label = "Peso",
+            icon = { Icon(Icons.Filled.MonitorWeight, contentDescription = "Registrar peso") },
+            onClick = onLogWeight,
+            modifier = Modifier.weight(1f),
+        )
+        QuickFab(
+            label = "Actividad",
+            icon = { Icon(Icons.AutoMirrored.Filled.DirectionsRun, contentDescription = "Registrar actividad") },
+            onClick = onLogActivity,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun QuickFab(
+    label: String,
+    icon: @Composable () -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        containerColor = Gold.copy(alpha = 0.14f),
+        contentColor = Gold,
+        shape = RoundedCornerShape(18.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+            icon()
+            Text(label, fontWeight = FontWeight.Bold)
+        }
     }
 }
 
