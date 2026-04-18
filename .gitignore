@@ -39,6 +39,8 @@ keystore*.p12
 .idea/
 *.iml
 .vscode/
+.claude/settings.local.json
+AGENTS.md
 *.suo
 *.user
 .settings/
