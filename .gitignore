@@ -24,6 +24,7 @@ npm-debug.log*
 
 # Android
 .gradle/
+android/**/build/
 local.properties
 *.apk
 *.aab
