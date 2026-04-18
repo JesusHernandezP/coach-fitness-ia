@@ -35,10 +35,7 @@ class DashboardServiceTest {
   @Test
   void weeklySummary_aggregatesCorrectly() {
     List<ActivityLog> logs =
-        List.of(
-            activityLog(8000, 300),
-            activityLog(10000, 400),
-            activityLog(6000, 250));
+        List.of(activityLog(8000, 300), activityLog(10000, 400), activityLog(6000, 250));
 
     when(activityRepo.findByUserIdAndDateBetweenOrderByDateAsc(eq(1L), any(), any()))
         .thenReturn(logs);
@@ -83,11 +80,7 @@ class DashboardServiceTest {
   }
 
   private ActivityLog activityLog(int steps, int cals) {
-    return ActivityLog.builder()
-        .date(LocalDate.now())
-        .steps(steps)
-        .caloriesBurned(cals)
-        .build();
+    return ActivityLog.builder().date(LocalDate.now()).steps(steps).caloriesBurned(cals).build();
   }
 
   private WeightLog weightLog(double kg, Instant at) {

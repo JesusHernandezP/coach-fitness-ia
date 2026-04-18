@@ -25,9 +25,7 @@ public class ProfileService {
   public ProfileResponse saveProfile(Long userId, ProfileRequest req) {
     User user = userRepo.getReferenceById(userId);
     MetabolicProfile profile =
-        profileRepo
-            .findByUserId(userId)
-            .orElse(MetabolicProfile.builder().user(user).build());
+        profileRepo.findByUserId(userId).orElse(MetabolicProfile.builder().user(user).build());
 
     profile.setAge(req.age());
     profile.setSex(req.sex());

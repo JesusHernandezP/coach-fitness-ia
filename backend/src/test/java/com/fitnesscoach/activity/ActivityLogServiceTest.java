@@ -38,8 +38,8 @@ class ActivityLogServiceTest {
   @Test
   void upsert_updatesExistingLog_onSameDate() {
     LocalDate today = LocalDate.now();
-    ActivityLog existing = ActivityLog.builder().id(1L).user(user).date(today)
-        .steps(5000).caloriesBurned(200).build();
+    ActivityLog existing =
+        ActivityLog.builder().id(1L).user(user).date(today).steps(5000).caloriesBurned(200).build();
     ActivityLogRequest req = new ActivityLogRequest(today, 8000, null, null);
 
     when(activityRepo.findByUserIdAndDate(1L, today)).thenReturn(Optional.of(existing));

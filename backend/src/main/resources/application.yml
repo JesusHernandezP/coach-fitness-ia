@@ -1,6 +1,8 @@
 spring:
   application:
     name: fitness-ai-coach
+  config:
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}

@@ -49,8 +49,7 @@ public class DashboardService {
   }
 
   public TodaySnapshot today(Long userId) {
-    ActivityLog todayLog =
-        activityRepo.findByUserIdAndDate(userId, LocalDate.now()).orElse(null);
+    ActivityLog todayLog = activityRepo.findByUserIdAndDate(userId, LocalDate.now()).orElse(null);
 
     int steps = todayLog != null ? nullToZero(todayLog.getSteps()) : 0;
     int cals = todayLog != null ? nullToZero(todayLog.getCaloriesBurned()) : 0;
@@ -58,8 +57,7 @@ public class DashboardService {
     Double currentWeight =
         profileRepo.findByUserId(userId).map(p -> p.getCurrentWeightKg()).orElse(null);
 
-    Double targetCalories =
-        targetRepo.findByUserId(userId).map(t -> t.getCalories()).orElse(null);
+    Double targetCalories = targetRepo.findByUserId(userId).map(t -> t.getCalories()).orElse(null);
 
     return new TodaySnapshot(steps, cals, currentWeight, targetCalories);
   }
