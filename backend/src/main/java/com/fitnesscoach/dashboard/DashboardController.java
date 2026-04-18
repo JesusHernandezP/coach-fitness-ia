@@ -21,8 +21,7 @@ public class DashboardController {
   @GetMapping("/weight-progress")
   @Operation(summary = "Serie temporal de peso (ultimos N dias, default 90)")
   public List<WeightProgressPoint> weightProgress(
-      @AuthenticationPrincipal User user,
-      @RequestParam(defaultValue = "90") int days) {
+      @AuthenticationPrincipal User user, @RequestParam(defaultValue = "90") int days) {
     return dashboardService.weightProgress(user.getId(), days);
   }
 

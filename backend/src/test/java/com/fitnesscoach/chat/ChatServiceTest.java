@@ -50,14 +50,23 @@ class ChatServiceTest {
 
   @Test
   void sendMessage_returnsAssistantReply_underRateLimit() {
-    ChatConversation conv =
-        ChatConversation.builder().id(1L).user(user).title("Test").build();
+    ChatConversation conv = ChatConversation.builder().id(1L).user(user).title("Test").build();
     ChatMessage userMsg =
-        ChatMessage.builder().id(10L).conversation(conv).role(MessageRole.user)
-            .content("hola").createdAt(Instant.now()).build();
+        ChatMessage.builder()
+            .id(10L)
+            .conversation(conv)
+            .role(MessageRole.user)
+            .content("hola")
+            .createdAt(Instant.now())
+            .build();
     ChatMessage assistantMsg =
-        ChatMessage.builder().id(11L).conversation(conv).role(MessageRole.assistant)
-            .content("Hola! Como puedo ayudarte?").createdAt(Instant.now()).build();
+        ChatMessage.builder()
+            .id(11L)
+            .conversation(conv)
+            .role(MessageRole.assistant)
+            .content("Hola! Como puedo ayudarte?")
+            .createdAt(Instant.now())
+            .build();
 
     when(messageRepo.countByConversationUserIdAndCreatedAtAfter(eq(1L), any())).thenReturn(0L);
     when(conversationRepo.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(conv));

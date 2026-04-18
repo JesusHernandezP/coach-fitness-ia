@@ -34,9 +34,7 @@ public class GroqClient {
             .retrieve()
             .body(GroqResponse.class);
 
-    if (response == null
-        || response.choices() == null
-        || response.choices().isEmpty()) {
+    if (response == null || response.choices() == null || response.choices().isEmpty()) {
       throw new IllegalStateException("Groq devolvio respuesta vacia");
     }
     return response.choices().get(0).message().content();

@@ -51,7 +51,8 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest req) {
-    return build(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor", req.getRequestURI());
+    return build(
+        HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor", req.getRequestURI());
   }
 
   private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, String path) {

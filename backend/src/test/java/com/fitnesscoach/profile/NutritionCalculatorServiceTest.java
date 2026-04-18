@@ -58,15 +58,25 @@ class NutritionCalculatorServiceTest {
   void goalAdjustment_gainWeight_addsCalories() {
     MetabolicProfile lose =
         MetabolicProfile.builder()
-            .age(25).sex(Sex.FEMALE).heightCm(165.0).currentWeightKg(60.0)
-            .activityLevel(ActivityLevel.LIGHTLY_ACTIVE).goal(Goal.LOSE_WEIGHT)
-            .dietType(DietType.STANDARD).build();
+            .age(25)
+            .sex(Sex.FEMALE)
+            .heightCm(165.0)
+            .currentWeightKg(60.0)
+            .activityLevel(ActivityLevel.LIGHTLY_ACTIVE)
+            .goal(Goal.LOSE_WEIGHT)
+            .dietType(DietType.STANDARD)
+            .build();
 
     MetabolicProfile gain =
         MetabolicProfile.builder()
-            .age(25).sex(Sex.FEMALE).heightCm(165.0).currentWeightKg(60.0)
-            .activityLevel(ActivityLevel.LIGHTLY_ACTIVE).goal(Goal.GAIN_WEIGHT)
-            .dietType(DietType.STANDARD).build();
+            .age(25)
+            .sex(Sex.FEMALE)
+            .heightCm(165.0)
+            .currentWeightKg(60.0)
+            .activityLevel(ActivityLevel.LIGHTLY_ACTIVE)
+            .goal(Goal.GAIN_WEIGHT)
+            .dietType(DietType.STANDARD)
+            .build();
 
     double diff = calculator.calculate(gain).calories() - calculator.calculate(lose).calories();
     assertThat(diff).isCloseTo(800.0, within(1.0));
