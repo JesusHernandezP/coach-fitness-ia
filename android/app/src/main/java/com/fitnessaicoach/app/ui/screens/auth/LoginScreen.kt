@@ -4,6 +4,7 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -260,8 +262,8 @@ internal fun AuthTextField(
                 onNext = { onNext?.invoke() },
                 onDone = { onDone?.invoke() },
             ),
-            textStyle = LocalTextStyle.current.copy(
-                color    = TextPrimary,
+            textStyle = TextStyle(
+                color = TextPrimary,
                 fontSize = 16.sp,
             ),
             decorationBox = { inner ->
