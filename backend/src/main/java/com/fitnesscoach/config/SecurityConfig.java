@@ -2,7 +2,9 @@ package com.fitnesscoach.config;
 
 import com.fitnesscoach.security.JwtAuthFilter;
 import com.fitnesscoach.user.UserDetailsServiceImpl;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -68,7 +70,9 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of(allowedOrigins.split(",")));
+    List<String> origins =
+        Arrays.stream(allowedOrigins.split(",")).map(String::trim).collect(Collectors.toList());
+    config.setAllowedOriginPatterns(origins);
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("*"));
     config.setAllowCredentials(true);
