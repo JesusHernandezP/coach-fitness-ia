@@ -50,7 +50,7 @@ class LogWeightViewModel @Inject constructor(
 
         viewModelScope.launch {
             _submitState.value = UiState.Loading
-            repo.addWeight(weight, _formState.value.date)
+            repo.addWeight(weight, null)
                 .onSuccess {
                     _formState.value = LogWeightFormState(date = todayProvider())
                     _submitState.value = UiState.Success(Unit)
