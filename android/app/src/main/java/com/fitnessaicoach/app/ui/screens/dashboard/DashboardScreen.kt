@@ -252,7 +252,7 @@ private fun WeightProgressCard(points: List<WeightPoint>) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(points.first().date, color = TextMuted, fontSize = 12.sp)
+                Text(points.first().loggedAt.take(10), color = TextMuted, fontSize = 12.sp)
                 Text(
                     "${points.last().weightKg.toPrettyNumber()} kg",
                     color = Gold,
@@ -287,11 +287,11 @@ private fun WeeklySummaryCard(summary: WeeklySummary) {
 private fun TodaySummarySection(today: TodaySnapshot, weeklySummary: WeeklySummary) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard("Pasos hoy", today.stepsToday.toString(), "objetivo diario", Success, Modifier.weight(1f))
-            MetricCard("Kcal hoy", today.caloriesBurnedToday.toString(), "actividad", Info, Modifier.weight(1f))
+            MetricCard("Pasos hoy", today.steps.toString(), "objetivo diario", Success, Modifier.weight(1f))
+            MetricCard("Kcal hoy", today.caloriesBurned.toString(), "actividad", Info, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard("Delta 7d", today.weightDelta7d?.toPrettySigned() ?: "--", "peso", Gold, Modifier.weight(1f))
+            MetricCard("Delta 7d", weeklySummary.weightDelta?.toPrettySigned() ?: "--", "peso", Gold, Modifier.weight(1f))
             MetricCard("Media", weeklySummary.avgSteps.toInt().toString(), "pasos/dia", Gold, Modifier.weight(1f))
         }
     }
