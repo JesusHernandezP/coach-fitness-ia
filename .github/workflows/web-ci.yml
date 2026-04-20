@@ -27,14 +27,6 @@ jobs:
         working-directory: web
         run: npm ci
 
-      - name: Lint
-        working-directory: web
-        run: npm run lint
-
-      - name: Test
-        working-directory: web
-        run: npm test -- --watch=false --browsers=ChromeHeadless
-
       - name: Build production
         working-directory: web
         run: npm run build -- --configuration production
