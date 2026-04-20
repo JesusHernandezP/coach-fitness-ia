@@ -53,7 +53,10 @@ public class SecurityConfig {
         .exceptionHandling(
             ex ->
                 ex.authenticationEntryPoint(
-                    (req, res, e) -> res.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "No autenticado")))
+                    (req, res, e) ->
+                        res.sendError(
+                            jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED,
+                            "No autenticado")))
         .authenticationProvider(authenticationProvider())
         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
         .build();

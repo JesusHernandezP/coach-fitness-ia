@@ -32,7 +32,7 @@ jobs:
           restore-keys: gradle-${{ runner.os }}-
 
       - name: Grant execute permission
-        run: chmod +x android/gradlew
+        run: sed -i 's/\r$//' android/gradlew && chmod +x android/gradlew
 
       - name: Lint
         working-directory: android

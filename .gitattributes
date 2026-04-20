@@ -1,0 +1,4 @@
+# Force LF for shell scripts (CRLF breaks Linux CI runners)
+*.sh text eol=lf
+gradlew text eol=lf
+android/gradlew text eol=lf
