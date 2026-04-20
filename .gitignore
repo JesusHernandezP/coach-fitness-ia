@@ -2,6 +2,7 @@
 target/
 *.class
 *.jar
+!android/gradle/wrapper/gradle-wrapper.jar
 *.war
 *.ear
 .mvn/wrapper/maven-wrapper.jar
@@ -24,6 +25,7 @@ npm-debug.log*
 
 # Android
 .gradle/
+android/**/build/
 local.properties
 *.apk
 *.aab
@@ -38,6 +40,8 @@ keystore*.p12
 .idea/
 *.iml
 .vscode/
+.claude/settings.local.json
+AGENTS.md
 *.suo
 *.user
 .settings/

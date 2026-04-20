@@ -53,7 +53,7 @@ data class ActivityLogRequest(
 
 // ── Dashboard ──────────────────────────────────────────────────
 @JsonClass(generateAdapter = true)
-data class WeightPoint(@Json(name = "date") val date: String, @Json(name = "weightKg") val weightKg: Double)
+data class WeightPoint(@Json(name = "loggedAt") val loggedAt: String, @Json(name = "weightKg") val weightKg: Double)
 
 @JsonClass(generateAdapter = true)
 data class WeeklySummary(
@@ -61,13 +61,15 @@ data class WeeklySummary(
     @Json(name = "caloriesBurnedTotal") val caloriesBurnedTotal: Long,
     @Json(name = "daysLogged")          val daysLogged: Int,
     @Json(name = "avgSteps")            val avgSteps: Double,
+    @Json(name = "weightDelta")         val weightDelta: Double?,
 )
 
 @JsonClass(generateAdapter = true)
 data class TodaySnapshot(
-    @Json(name = "stepsToday")          val stepsToday: Long,
-    @Json(name = "caloriesBurnedToday") val caloriesBurnedToday: Long,
-    @Json(name = "weightDelta7d")       val weightDelta7d: Double?,
+    @Json(name = "steps")               val steps: Long,
+    @Json(name = "caloriesBurned")      val caloriesBurned: Long,
+    @Json(name = "currentWeightKg")     val currentWeightKg: Double?,
+    @Json(name = "targetCalories")      val targetCalories: Double?,
 )
 
 // ── Chat ───────────────────────────────────────────────────────

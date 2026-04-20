@@ -1,0 +1,72 @@
+name: Android Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-aab:
+    name: Build & Release AAB
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/**/gradle-wrapper.properties', 'android/**/libs.versions.toml') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Grant execute permission
+        run: chmod +x android/gradlew
+
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/release.jks
+
+      - name: Build release AAB
+        working-directory: android
+        run: ./gradlew bundleRelease
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/android/release.jks
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android/app/build/outputs/bundle/release/app-release.aab
+          generate_release_notes: true
+          body: |
+            ## Fitness AI Coach ${{ github.ref_name }}
+
+            ### Install
+            Download the AAB and upload to Google Play Console, or install via `bundletool`.
+
+            ### Required GitHub Secrets
+            - `KEYSTORE_BASE64` — keystore encoded in base64
+            - `KEYSTORE_PASSWORD` — keystore password
+            - `KEY_ALIAS` — key alias
+            - `KEY_PASSWORD` — key password
+            - `API_BASE_URL` — production API URL

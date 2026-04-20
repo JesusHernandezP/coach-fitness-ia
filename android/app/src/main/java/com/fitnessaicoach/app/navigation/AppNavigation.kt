@@ -20,6 +20,8 @@ import com.fitnessaicoach.app.ui.screens.auth.LoginScreen
 import com.fitnessaicoach.app.ui.screens.auth.RegisterScreen
 import com.fitnessaicoach.app.ui.screens.chat.ChatScreen
 import com.fitnessaicoach.app.ui.screens.dashboard.DashboardScreen
+import com.fitnessaicoach.app.ui.screens.logs.LogActivityScreen
+import com.fitnessaicoach.app.ui.screens.logs.LogWeightScreen
 import com.fitnessaicoach.app.ui.screens.profile.ProfileScreen
 import com.fitnessaicoach.app.ui.theme.Border
 import com.fitnessaicoach.app.ui.theme.Gold
@@ -32,6 +34,8 @@ sealed class Screen(val route: String) {
     object Dashboard         : Screen("dashboard")
     object Chat              : Screen("chat")
     object Profile           : Screen("profile")
+    object LogActivity       : Screen("log-activity")
+    object LogWeight         : Screen("log-weight")
     object ProfileOnboarding : Screen("profile-onboarding")
 }
 
@@ -99,6 +103,8 @@ fun AppNavigation(isLoggedIn: Boolean) {
             composable(Screen.Dashboard.route)         { DashboardScreen(navController) }
             composable(Screen.Chat.route)              { ChatScreen(navController) }
             composable(Screen.Profile.route)           { ProfileScreen(navController) }
+            composable(Screen.LogActivity.route)       { LogActivityScreen(navController) }
+            composable(Screen.LogWeight.route)         { LogWeightScreen(navController) }
             composable(Screen.ProfileOnboarding.route) { ProfileScreen(navController, forceOnboarding = true) }
         }
     }

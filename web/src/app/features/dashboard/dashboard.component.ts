@@ -8,6 +8,7 @@ import {
   WeightPoint,
   WeeklySummary,
   TodaySnapshot,
+  ActivityEntry,
 } from './dashboard.service';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -31,7 +32,7 @@ const today = () => new Date().toISOString().slice(0, 10);
       <div class="stat-grid">
         <div class="stat-card" style="--delay:0s">
           <span class="stat-label">Pasos hoy</span>
-          <span class="stat-value">{{ today()?.stepsToday ?? 0 | number }}</span>
+          <span class="stat-value">{{ today()?.steps ?? 0 | number }}</span>
           <span class="stat-sub">objetivo 8 000</span>
           <div class="stat-bar">
             <div class="stat-bar-fill steps-fill" [style.width]="stepsPct() + '%'"></div>
@@ -40,7 +41,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
         <div class="stat-card" style="--delay:0.06s">
           <span class="stat-label">Cal. quemadas</span>
-          <span class="stat-value accent">{{ today()?.caloriesBurnedToday ?? 0 | number }}</span>
+          <span class="stat-value accent">{{ today()?.caloriesBurned ?? 0 | number }}</span>
           <span class="stat-sub">kcal activas</span>
           <div class="stat-ring-wrap">
             <svg viewBox="0 0 36 36" class="stat-ring-svg">
@@ -68,16 +69,16 @@ const today = () => new Date().toISOString().slice(0, 10);
 
         <div class="stat-card" style="--delay:0.18s">
           <span class="stat-label">Delta peso 7d</span>
-          @if (today()?.weightDelta7d !== null && today()?.weightDelta7d !== undefined) {
-            <span class="stat-value" [class.positive]="(today()?.weightDelta7d ?? 0) > 0" [class.negative]="(today()?.weightDelta7d ?? 0) < 0">
-              {{ (today()?.weightDelta7d ?? 0) > 0 ? '+' : '' }}{{ today()?.weightDelta7d | number:'1.1-1' }} kg
+          @if (weekly()?.weightDelta !== null && weekly()?.weightDelta !== undefined) {
+            <span class="stat-value" [class.positive]="(weekly()?.weightDelta ?? 0) > 0" [class.negative]="(weekly()?.weightDelta ?? 0) < 0">
+              {{ (weekly()?.weightDelta ?? 0) > 0 ? '+' : '' }}{{ weekly()?.weightDelta | number:'1.1-1' }} kg
             </span>
           } @else {
             <span class="stat-value muted">—</span>
           }
           <span class="stat-sub">últimos 7 días</span>
-          <div class="delta-arrow" [class.up]="(today()?.weightDelta7d ?? 0) > 0" [class.down]="(today()?.weightDelta7d ?? 0) < 0">
-            {{ (today()?.weightDelta7d ?? 0) > 0 ? '↑' : (today()?.weightDelta7d ?? 0) < 0 ? '↓' : '→' }}
+          <div class="delta-arrow" [class.up]="(weekly()?.weightDelta ?? 0) > 0" [class.down]="(weekly()?.weightDelta ?? 0) < 0">
+            {{ (weekly()?.weightDelta ?? 0) > 0 ? '↑' : (weekly()?.weightDelta ?? 0) < 0 ? '↓' : '→' }}
           </div>
         </div>
       </div>
@@ -492,9 +493,10 @@ export class DashboardComponent implements OnInit {
 
   now = new Date();
 
-  todayData   = signal<TodaySnapshot | null>(null);
-  weeklyData  = signal<WeeklySummary | null>(null);
-  weightPts   = signal<WeightPoint[]>([]);
+  todayData         = signal<TodaySnapshot | null>(null);
+  weeklyData        = signal<WeeklySummary | null>(null);
+  weightPts         = signal<WeightPoint[]>([]);
+  weeklyActivities  = signal<ActivityEntry[]>([]);
 
   addingWeight  = signal(false);
   savingActivity = signal(false);
@@ -507,17 +509,17 @@ export class DashboardComponent implements OnInit {
   weekly  = this.weeklyData;
 
   stepsPct() {
-    return Math.min(((this.todayData()?.stepsToday ?? 0) / 8000) * 100, 100);
+    return Math.min(((this.todayData()?.steps ?? 0) / 8000) * 100, 100);
   }
 
   calBurnedPct() {
-    return Math.min(((this.todayData()?.caloriesBurnedToday ?? 0) / 600) * 100, 100);
+    return Math.min(((this.todayData()?.caloriesBurned ?? 0) / 600) * 100, 100);
   }
 
   weightData() {
     const pts = this.weightPts();
     return {
-      labels: pts.map(p => p.date),
+      labels: pts.map(p => p.loggedAt.slice(0, 10)),
       datasets: [{
         label: 'Peso (kg)',
         data: pts.map(p => p.weightKg),
@@ -535,14 +537,21 @@ export class DashboardComponent implements OnInit {
   }
 
   stepsData() {
-    const w = this.weeklyData();
-    if (!w) return { labels: [], datasets: [] } as ChartData<'bar'>;
-    const days = ['L','M','X','J','V','S','D'];
+    const activities = this.weeklyActivities();
+    if (!activities.length) return { labels: [], datasets: [] } as ChartData<'bar'>;
+    const dayLabels = ['L','M','X','J','V','S','D'];
+    const stepsPerDay = Array(7).fill(0);
+    const baseDate = new Date(Date.now() - 6 * 86400000);
+    activities.forEach(a => {
+      const d = new Date(a.date + 'T00:00:00');
+      const idx = Math.round((d.getTime() - baseDate.getTime()) / 86400000);
+      if (idx >= 0 && idx < 7) stepsPerDay[idx] = a.steps ?? 0;
+    });
     return {
-      labels: days,
+      labels: dayLabels,
       datasets: [{
         label: 'Pasos',
-        data: Array(7).fill(0),
+        data: stepsPerDay,
         backgroundColor: 'rgba(212,178,0,0.25)',
         borderColor: 'rgba(212,178,0,0.6)',
         borderWidth: 1,
@@ -600,10 +609,11 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.svc.loadAll().subscribe({
-      next: ({ weightProgress, weeklySummary, today }) => {
+      next: ({ weightProgress, weeklySummary, today, weeklyActivities }) => {
         this.weightPts.set(weightProgress);
         this.weeklyData.set(weeklySummary);
         this.todayData.set(today);
+        this.weeklyActivities.set(weeklyActivities);
       },
       error: () => {},
     });
@@ -638,6 +648,7 @@ export class DashboardComponent implements OnInit {
         setTimeout(() => this.activitySaved.set(false), 3000);
         this.svc.reloadToday().subscribe(t => this.todayData.set(t));
         this.svc.reloadWeeklySummary().subscribe(w => this.weeklyData.set(w));
+        this.svc.reloadWeeklyActivities().subscribe(a => this.weeklyActivities.set(a));
       },
       error: () => this.savingActivity.set(false),
     });

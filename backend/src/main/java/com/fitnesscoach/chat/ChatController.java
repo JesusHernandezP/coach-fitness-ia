@@ -30,8 +30,7 @@ public class ChatController {
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(summary = "Crear nueva conversacion")
   public ConversationResponse createConversation(
-      @AuthenticationPrincipal User user,
-      @RequestParam(required = false) String title) {
+      @AuthenticationPrincipal User user, @RequestParam(required = false) String title) {
     return chatService.createConversation(user, title);
   }
 

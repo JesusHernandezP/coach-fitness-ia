@@ -102,8 +102,12 @@ public class ChatService {
                 SYSTEM_PROMPT
                     + String.format(
                         " Perfil del usuario: %s, %d anos, %.0f cm, %.1f kg, objetivo: %s, dieta: %s.",
-                        p.getSex(), p.getAge(), p.getHeightCm(),
-                        p.getCurrentWeightKg(), p.getGoal(), p.getDietType()))
+                        p.getSex(),
+                        p.getAge(),
+                        p.getHeightCm(),
+                        p.getCurrentWeightKg(),
+                        p.getGoal(),
+                        p.getDietType()))
         .orElse(SYSTEM_PROMPT);
   }
 

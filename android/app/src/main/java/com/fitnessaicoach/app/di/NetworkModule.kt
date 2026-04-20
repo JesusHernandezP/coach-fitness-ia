@@ -3,6 +3,7 @@ package com.fitnessaicoach.app.di
 import com.fitnessaicoach.app.BuildConfig
 import com.fitnessaicoach.app.data.network.ApiService
 import com.fitnessaicoach.app.data.network.AuthInterceptor
+import com.fitnessaicoach.app.data.network.UnauthorizedInterceptor
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -34,10 +35,12 @@ object NetworkModule {
 
     @Provides @Singleton
     fun provideOkHttpClient(
-        authInterceptor:    AuthInterceptor,
-        loggingInterceptor: HttpLoggingInterceptor,
+        authInterceptor:         AuthInterceptor,
+        unauthorizedInterceptor: UnauthorizedInterceptor,
+        loggingInterceptor:      HttpLoggingInterceptor,
     ): OkHttpClient = OkHttpClient.Builder()
         .addInterceptor(authInterceptor)
+        .addInterceptor(unauthorizedInterceptor)
         .addInterceptor(loggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)

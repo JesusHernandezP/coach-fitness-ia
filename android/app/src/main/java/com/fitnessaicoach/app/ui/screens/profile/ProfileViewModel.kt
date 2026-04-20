@@ -19,7 +19,7 @@ data class ProfileFormState(
     val heightCm: Double = 0.0,
     val currentWeightKg: Double = 0.0,
     val activityLevel: String = "SEDENTARY",
-    val goal: String = "LOSE_WEIGHT",
+    val goal: String = "LOSE",
     val dietType: String = "STANDARD",
     val weeklyExerciseDays: Int = 0,
     val exerciseMinutes: Int = 0,
@@ -57,6 +57,7 @@ data class ProfileFormState(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val repo: ProfileRepository,
+    private val authRepo: com.fitnessaicoach.app.data.repository.AuthRepository,
 ) : ViewModel() {
 
     private val _formState = MutableStateFlow(ProfileFormState())
@@ -74,9 +75,9 @@ class ProfileViewModel @Inject constructor(
     private val _saveState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val saveState: StateFlow<UiState<Unit>> = _saveState.asStateFlow()
 
-    init {
-        loadProfile()
-    }
+    init { loadProfile() }
+
+    fun reloadProfile() { loadProfile() }
 
     private fun loadProfile() {
         viewModelScope.launch {
@@ -162,5 +163,9 @@ class ProfileViewModel @Inject constructor(
 
     fun clearSaveState() {
         _saveState.value = UiState.Idle
+    }
+
+    fun logout() {
+        viewModelScope.launch { authRepo.logout() }
     }
 }
