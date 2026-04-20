@@ -2,6 +2,7 @@ package com.fitnessaicoach.app.ui.screens.profile
 
 import com.fitnessaicoach.app.data.network.MetabolicProfile
 import com.fitnessaicoach.app.data.network.NutritionTarget
+import com.fitnessaicoach.app.data.repository.AuthRepository
 import com.fitnessaicoach.app.data.repository.ProfileRepository
 import com.fitnessaicoach.app.ui.MainDispatcherRule
 import com.fitnessaicoach.app.ui.common.UiState
@@ -27,10 +28,12 @@ class ProfileViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var repo: ProfileRepository
+    private lateinit var authRepo: AuthRepository
 
     @Before
     fun setup() {
         repo = mock()
+        authRepo = mock()
     }
 
     @Test
@@ -41,7 +44,7 @@ class ProfileViewModelTest {
             heightCm = 180.0,
             currentWeightKg = 82.5,
             activityLevel = "MODERATE",
-            goal = "LOSE_WEIGHT",
+            goal = "LOSE",
             dietType = "STANDARD",
             weeklyExerciseDays = 4,
             exerciseMinutes = 50,
@@ -51,7 +54,7 @@ class ProfileViewModelTest {
         whenever(repo.getProfile()).thenReturn(Result.success(profile))
         whenever(repo.getTargets()).thenReturn(Result.success(targets))
 
-        val viewModel = ProfileViewModel(repo)
+        val viewModel = ProfileViewModel(repo, authRepo)
         advanceUntilIdle()
 
         assertEquals(30, viewModel.formState.value.age)
@@ -65,7 +68,7 @@ class ProfileViewModelTest {
     fun `loadProfile uses defaults and keeps onboarding when profile is missing`() = runTest {
         whenever(repo.getProfile()).thenReturn(Result.failure(RuntimeException("404")))
 
-        val viewModel = ProfileViewModel(repo)
+        val viewModel = ProfileViewModel(repo, authRepo)
         advanceUntilIdle()
 
         assertTrue(viewModel.isOnboarding.value)
@@ -93,7 +96,7 @@ class ProfileViewModelTest {
         whenever(repo.saveProfile(any())).thenReturn(Result.success(savedProfile))
         whenever(repo.getTargets()).thenReturn(Result.success(targets))
 
-        val viewModel = ProfileViewModel(repo)
+        val viewModel = ProfileViewModel(repo, authRepo)
         advanceUntilIdle()
 
         viewModel.updateAge("28")
@@ -121,7 +124,7 @@ class ProfileViewModelTest {
         whenever(repo.getProfile()).thenReturn(Result.failure(RuntimeException("404")))
         whenever(repo.saveProfile(any())).thenReturn(Result.failure(RuntimeException("boom")))
 
-        val viewModel = ProfileViewModel(repo)
+        val viewModel = ProfileViewModel(repo, authRepo)
         advanceUntilIdle()
 
         viewModel.updateAge("28")

@@ -30,8 +30,8 @@ class LogWeightViewModelTest {
 
     @Test
     fun `submitWeight saves weight and clears form on success`() = runTest {
-        whenever(repo.addWeight(81.4, "2026-04-18")).thenReturn(
-            Result.success(WeightLog(1L, 81.4, "2026-04-18")),
+        whenever(repo.addWeight(81.4, null)).thenReturn(
+            Result.success(WeightLog(1L, 81.4, "2026-04-18T00:00:00Z")),
         )
 
         val viewModel = LogWeightViewModel(repo) { "2026-04-18" }
@@ -39,7 +39,7 @@ class LogWeightViewModelTest {
         viewModel.submit()
         advanceUntilIdle()
 
-        verify(repo).addWeight(81.4, "2026-04-18")
+        verify(repo).addWeight(81.4, null)
         assertEquals("", viewModel.formState.value.weight)
         assertEquals(UiState.Success(Unit), viewModel.submitState.value)
     }

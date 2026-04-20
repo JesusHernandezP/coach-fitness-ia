@@ -34,19 +34,21 @@ class DashboardViewModelTest {
     @Test
     fun `loadDashboard exposes dashboard metrics on success`() = runTest {
         val points = listOf(
-            WeightPoint(date = "2026-04-14", weightKg = 82.4),
-            WeightPoint(date = "2026-04-18", weightKg = 81.7),
+            WeightPoint(loggedAt = "2026-04-14T00:00:00Z", weightKg = 82.4),
+            WeightPoint(loggedAt = "2026-04-18T00:00:00Z", weightKg = 81.7),
         )
         val weeklySummary = WeeklySummary(
             stepsTotal = 54321,
             caloriesBurnedTotal = 2300,
             daysLogged = 6,
             avgSteps = 9053.5,
+            weightDelta = -0.7,
         )
         val todaySnapshot = TodaySnapshot(
-            stepsToday = 8123,
-            caloriesBurnedToday = 410,
-            weightDelta7d = -0.8,
+            steps = 8123,
+            caloriesBurned = 410,
+            currentWeightKg = 81.7,
+            targetCalories = 2360.0,
         )
 
         whenever(repo.weightProgress()).thenReturn(Result.success(points))
@@ -54,6 +56,7 @@ class DashboardViewModelTest {
         whenever(repo.today()).thenReturn(Result.success(todaySnapshot))
 
         val viewModel = DashboardViewModel(repo) { "2026-04-18" }
+        viewModel.loadDashboard()
         advanceUntilIdle()
 
         assertEquals(
@@ -76,22 +79,26 @@ class DashboardViewModelTest {
             caloriesBurnedTotal = 1800,
             daysLogged = 5,
             avgSteps = 8000.0,
+            weightDelta = null,
         )
         val updatedWeeklySummary = WeeklySummary(
             stepsTotal = 47000,
             caloriesBurnedTotal = 2150,
             daysLogged = 6,
             avgSteps = 7833.3,
+            weightDelta = -0.5,
         )
         val initialTodaySnapshot = TodaySnapshot(
-            stepsToday = 0,
-            caloriesBurnedToday = 0,
-            weightDelta7d = -0.5,
+            steps = 0,
+            caloriesBurned = 0,
+            currentWeightKg = null,
+            targetCalories = null,
         )
         val updatedTodaySnapshot = TodaySnapshot(
-            stepsToday = 7000,
-            caloriesBurnedToday = 350,
-            weightDelta7d = -0.5,
+            steps = 7000,
+            caloriesBurned = 350,
+            currentWeightKg = null,
+            targetCalories = null,
         )
         whenever(repo.weightProgress()).thenReturn(Result.success(emptyList()))
         whenever(repo.weeklySummary())
@@ -110,6 +117,7 @@ class DashboardViewModelTest {
         ).thenReturn(Result.success(Unit))
 
         val viewModel = DashboardViewModel(repo) { "2026-04-18" }
+        viewModel.loadDashboard()
         advanceUntilIdle()
 
         viewModel.updateSteps("7000")
@@ -135,10 +143,11 @@ class DashboardViewModelTest {
     @Test
     fun `loadDashboard exposes error when repository fails`() = runTest {
         whenever(repo.weightProgress()).thenReturn(Result.failure(RuntimeException("sin red")))
-        whenever(repo.weeklySummary()).thenReturn(Result.success(WeeklySummary(0, 0, 0, 0.0)))
-        whenever(repo.today()).thenReturn(Result.success(TodaySnapshot(0, 0, null)))
+        whenever(repo.weeklySummary()).thenReturn(Result.success(WeeklySummary(0, 0, 0, 0.0, null)))
+        whenever(repo.today()).thenReturn(Result.success(TodaySnapshot(0, 0, null, null)))
 
         val viewModel = DashboardViewModel(repo) { "2026-04-18" }
+        viewModel.loadDashboard()
         advanceUntilIdle()
 
         assertEquals(UiState.Error("sin red"), viewModel.dashboardState.value)

@@ -71,7 +71,7 @@ fun RegisterScreen(
             .fillMaxSize()
             .background(Background),
     ) {
-        DiagonalAccent()
+        AuthBackground()
 
         Column(
             modifier = Modifier

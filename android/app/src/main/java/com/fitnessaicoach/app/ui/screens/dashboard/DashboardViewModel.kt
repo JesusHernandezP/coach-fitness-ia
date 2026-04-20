@@ -53,10 +53,6 @@ class DashboardViewModel @Inject constructor(
     private val _submitState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val submitState: StateFlow<UiState<Unit>> = _submitState.asStateFlow()
 
-    init {
-        loadDashboard()
-    }
-
     fun loadDashboard() {
         viewModelScope.launch {
             _dashboardState.value = UiState.Loading

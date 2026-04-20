@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
@@ -25,12 +24,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -41,7 +41,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -70,12 +69,10 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
-    val formState by viewModel.formState.collectAsStateWithLifecycle()
-    val submitState by viewModel.submitState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(submitState) {
-        if (submitState is UiState.Success) {
-            viewModel.clearSubmitState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.loadDashboard()
         }
     }
 
@@ -121,12 +118,6 @@ fun DashboardScreen(
                 DashboardContentView(
                     navController = navController,
                     content = state.data,
-                    formState = formState,
-                    submitState = submitState,
-                    onStepsChange = viewModel::updateSteps,
-                    onCaloriesChange = viewModel::updateCaloriesBurned,
-                    onNotesChange = viewModel::updateNotes,
-                    onSubmit = viewModel::submitTodayActivity,
                 )
             }
 
@@ -139,12 +130,6 @@ fun DashboardScreen(
 private fun DashboardContentView(
     navController: NavController,
     content: DashboardContent,
-    formState: ActivityFormState,
-    submitState: UiState<Unit>,
-    onStepsChange: (String) -> Unit,
-    onCaloriesChange: (String) -> Unit,
-    onNotesChange: (String) -> Unit,
-    onSubmit: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -161,14 +146,6 @@ private fun DashboardContentView(
         WeightProgressCard(content.weightProgress)
         WeeklySummaryCard(content.weeklySummary)
         TodaySummarySection(content.todaySnapshot, content.weeklySummary)
-        InlineActivityCard(
-            formState = formState,
-            submitState = submitState,
-            onStepsChange = onStepsChange,
-            onCaloriesChange = onCaloriesChange,
-            onNotesChange = onNotesChange,
-            onSubmit = onSubmit,
-        )
         Spacer(Modifier.height(12.dp))
     }
 }
@@ -252,7 +229,7 @@ private fun WeightProgressCard(points: List<WeightPoint>) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(points.first().date, color = TextMuted, fontSize = 12.sp)
+                Text(points.first().loggedAt.take(10), color = TextMuted, fontSize = 12.sp)
                 Text(
                     "${points.last().weightKg.toPrettyNumber()} kg",
                     color = Gold,
@@ -287,69 +264,13 @@ private fun WeeklySummaryCard(summary: WeeklySummary) {
 private fun TodaySummarySection(today: TodaySnapshot, weeklySummary: WeeklySummary) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard("Pasos hoy", today.stepsToday.toString(), "objetivo diario", Success, Modifier.weight(1f))
-            MetricCard("Kcal hoy", today.caloriesBurnedToday.toString(), "actividad", Info, Modifier.weight(1f))
+            MetricCard("Pasos hoy", today.steps.toString(), "objetivo diario", Success, Modifier.weight(1f))
+            MetricCard("Kcal hoy", today.caloriesBurned.toString(), "actividad", Info, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard("Delta 7d", today.weightDelta7d?.toPrettySigned() ?: "--", "peso", Gold, Modifier.weight(1f))
+            MetricCard("Delta 7d", weeklySummary.weightDelta?.toPrettySigned() ?: "--", "peso", Gold, Modifier.weight(1f))
             MetricCard("Media", weeklySummary.avgSteps.toInt().toString(), "pasos/dia", Gold, Modifier.weight(1f))
         }
-    }
-}
-
-@Composable
-private fun InlineActivityCard(
-    formState: ActivityFormState,
-    submitState: UiState<Unit>,
-    onStepsChange: (String) -> Unit,
-    onCaloriesChange: (String) -> Unit,
-    onNotesChange: (String) -> Unit,
-    onSubmit: () -> Unit,
-) {
-    DashboardCard(
-        title = "REGISTRAR ACTIVIDAD",
-        subtitle = "Hoy ${formState.date}",
-    ) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            DashboardField(
-                label = "Pasos",
-                value = formState.steps,
-                onValueChange = onStepsChange,
-                keyboardType = KeyboardType.Number,
-                modifier = Modifier.weight(1f),
-            )
-            DashboardField(
-                label = "Calorias",
-                value = formState.caloriesBurned,
-                onValueChange = onCaloriesChange,
-                keyboardType = KeyboardType.Number,
-                modifier = Modifier.weight(1f),
-            )
-        }
-        Spacer(Modifier.height(12.dp))
-        DashboardField(
-            label = "Notas",
-            value = formState.notes,
-            onValueChange = onNotesChange,
-            keyboardType = KeyboardType.Text,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = false,
-        )
-        Spacer(Modifier.height(12.dp))
-        when (submitState) {
-            is UiState.Error -> InlineBanner(submitState.message, false)
-            is UiState.Success -> InlineBanner("Actividad guardada y panel actualizado.", true)
-            else -> Unit
-        }
-        if (submitState is UiState.Error || submitState is UiState.Success) {
-            Spacer(Modifier.height(12.dp))
-        }
-        GoldButton(
-            text = if (submitState is UiState.Loading) "Guardando..." else "Guardar actividad de hoy",
-            enabled = submitState !is UiState.Loading && formState.canSubmit(),
-            loading = submitState is UiState.Loading,
-            onClick = onSubmit,
-        )
     }
 }
 
@@ -371,40 +292,6 @@ private fun DashboardCard(
         Text(subtitle, color = TextMuted, fontSize = 13.sp)
         Spacer(Modifier.height(4.dp))
         content()
-    }
-}
-
-@Composable
-private fun DashboardField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    keyboardType: KeyboardType,
-    modifier: Modifier,
-    singleLine: Boolean = true,
-) {
-    Column(modifier = modifier) {
-        Text(label.uppercase(), color = TextMuted, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(6.dp))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = singleLine,
-            minLines = if (singleLine) 1 else 3,
-            shape = RoundedCornerShape(14.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Surface2,
-                unfocusedContainerColor = Surface2,
-                disabledContainerColor = Surface2,
-                focusedBorderColor = Gold,
-                unfocusedBorderColor = Border,
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary,
-                cursorColor = Gold,
-            ),
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        )
     }
 }
 

@@ -9,14 +9,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
-@SpringBootTest(
-    properties = {
-      "DB_URL=jdbc:postgresql://localhost:5432/fitnesscoach",
-      "DB_USER=postgres",
-      "DB_PASSWORD=changeme",
-      "JWT_SECRET=test-secret",
-      "APP_DOCS_ENABLED=true"
-    })
+@SpringBootTest(properties = {"APP_DOCS_ENABLED=true"})
 @AutoConfigureMockMvc
 class OpenApiDocsIntegrationTest {
 

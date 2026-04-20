@@ -2,7 +2,9 @@ package com.fitnessaicoach.app.ui.screens.auth
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import kotlin.math.pow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -64,8 +66,7 @@ fun LoginScreen(
             .fillMaxSize()
             .background(Background),
     ) {
-        // Diagonal gold accent band
-        DiagonalAccent()
+        AuthBackground()
 
         Column(
             modifier = Modifier
@@ -212,7 +213,6 @@ internal fun DiagonalAccent() {
                         ),
                     )
                 }
-                // thin gold line accent
                 rotate(-20f, pivot = Offset(size.width * 0.7f, 0f)) {
                     drawRect(
                         color  = gold.copy(alpha = 0.35f),
@@ -222,6 +222,66 @@ internal fun DiagonalAccent() {
                 }
             },
     )
+}
+
+@Composable
+internal fun AuthBackground() {
+    val gold = Gold
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        // Radial gold glow top-right
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(gold.copy(alpha = 0.18f), Color.Transparent),
+                center = Offset(size.width * 0.9f, size.height * 0.05f),
+                radius = size.width * 0.65f,
+            ),
+            center = Offset(size.width * 0.9f, size.height * 0.05f),
+            radius = size.width * 0.65f,
+        )
+        // Secondary glow bottom-left
+        drawCircle(
+            brush = Brush.radialGradient(
+                colors = listOf(gold.copy(alpha = 0.07f), Color.Transparent),
+                center = Offset(size.width * 0.05f, size.height * 0.85f),
+                radius = size.width * 0.45f,
+            ),
+            center = Offset(size.width * 0.05f, size.height * 0.85f),
+            radius = size.width * 0.45f,
+        )
+        // Diagonal accent line
+        val lineX = size.width * 0.78f
+        rotate(-22f, pivot = Offset(lineX, 0f)) {
+            drawRect(
+                color = gold.copy(alpha = 0.28f),
+                topLeft = Offset(lineX, 0f),
+                size = androidx.compose.ui.geometry.Size(1.5f, size.height * 0.55f),
+            )
+            drawRect(
+                color = gold.copy(alpha = 0.10f),
+                topLeft = Offset(lineX + 14f, 0f),
+                size = androidx.compose.ui.geometry.Size(1f, size.height * 0.40f),
+            )
+        }
+        // Dot grid top-right quadrant
+        val dotSpacing = 36f
+        val dotRadius  = 1.2f
+        val cols = (size.width  / dotSpacing).toInt()
+        val rows = (size.height / dotSpacing).toInt()
+        for (col in 0..cols) {
+            for (row in 0..rows) {
+                val x = col * dotSpacing
+                val y = row * dotSpacing
+                val distFromTopRight = kotlin.math.sqrt(
+                    ((size.width - x) / size.width).toDouble().pow(2) +
+                    (y / size.height).toDouble().pow(2)
+                ).toFloat()
+                val alpha = (0.12f - distFromTopRight * 0.10f).coerceIn(0f, 0.12f)
+                if (alpha > 0.01f) {
+                    drawCircle(color = gold.copy(alpha = alpha), radius = dotRadius, center = Offset(x, y))
+                }
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
