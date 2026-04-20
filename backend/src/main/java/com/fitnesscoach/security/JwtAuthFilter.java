@@ -1,5 +1,6 @@
 package com.fitnesscoach.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,15 +36,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     }
 
     String token = header.substring(7);
-    String username = jwtService.extractUsername(token);
-
-    if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-      var user = userDetailsService.loadUserByUsername(username);
-      if (jwtService.isTokenValid(token, user)) {
-        var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-        auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(auth);
+    try {
+      String username = jwtService.extractUsername(token);
+      if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        var user = userDetailsService.loadUserByUsername(username);
+        if (jwtService.isTokenValid(token, user)) {
+          var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+          auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+          SecurityContextHolder.getContext().setAuthentication(auth);
+        }
       }
+    } catch (JwtException e) {
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token invalido o expirado");
+      return;
     }
     chain.doFilter(request, response);
   }

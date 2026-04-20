@@ -3,9 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { forkJoin } from 'rxjs';
 
-export interface WeightPoint   { date: string; weightKg: number; }
-export interface WeeklySummary { stepsTotal: number; caloriesBurnedTotal: number; daysLogged: number; avgSteps: number; }
-export interface TodaySnapshot { stepsToday: number; caloriesBurnedToday: number; weightDelta7d: number | null; }
+export interface WeightPoint   { loggedAt: string; weightKg: number; }
+export interface WeeklySummary { stepsTotal: number; caloriesBurnedTotal: number; daysLogged: number; avgSteps: number; weightDelta: number | null; }
+export interface TodaySnapshot { steps: number; caloriesBurned: number; currentWeightKg: number | null; targetCalories: number | null; }
+export interface ActivityEntry { date: string; steps: number | null; caloriesBurned: number | null; }
 
 export interface AddWeightReq    { weightKg: number; loggedAt?: string; }
 export interface AddActivityReq  { date: string; steps?: number; caloriesBurned?: number; notes?: string; }
@@ -16,10 +17,13 @@ export class DashboardService {
   private base = environment.apiUrl;
 
   loadAll(days = 90) {
+    const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
+    const todayStr = new Date().toISOString().slice(0, 10);
     return forkJoin({
-      weightProgress: this.http.get<WeightPoint[]>(`${this.base}/dashboard/weight-progress?days=${days}`),
-      weeklySummary:  this.http.get<WeeklySummary>(`${this.base}/dashboard/weekly-summary`),
-      today:          this.http.get<TodaySnapshot>(`${this.base}/dashboard/today`),
+      weightProgress:    this.http.get<WeightPoint[]>(`${this.base}/dashboard/weight-progress?days=${days}`),
+      weeklySummary:     this.http.get<WeeklySummary>(`${this.base}/dashboard/weekly-summary`),
+      today:             this.http.get<TodaySnapshot>(`${this.base}/dashboard/today`),
+      weeklyActivities:  this.http.get<ActivityEntry[]>(`${this.base}/activities?from=${weekAgo}&to=${todayStr}`),
     });
   }
 
@@ -41,5 +45,11 @@ export class DashboardService {
 
   reloadWeeklySummary() {
     return this.http.get<WeeklySummary>(`${this.base}/dashboard/weekly-summary`);
+  }
+
+  reloadWeeklyActivities() {
+    const weekAgo = new Date(Date.now() - 6 * 86400000).toISOString().slice(0, 10);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    return this.http.get<ActivityEntry[]>(`${this.base}/activities?from=${weekAgo}&to=${todayStr}`);
   }
 }

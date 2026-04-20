@@ -57,6 +57,12 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
               <div class="toast-error">{{ saveError() }}</div>
             }
 
+            @if (loadingProfile()) {
+              <div class="profile-skeleton">
+                <div class="skel skel-row"></div>
+                <div class="skel skel-row skel-short"></div>
+              </div>
+            } @else {
             <div class="form-row">
               <div class="field">
                 <label class="label">Edad</label>
@@ -82,6 +88,7 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
                 }
               </div>
             </div>
+            } <!-- end @else loadingProfile -->
           </div>
 
           <div class="card form-card" style="--anim-delay:0.08s">
@@ -309,6 +316,12 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
       to   { opacity: 1; transform: translateY(0); }
     }
 
+    .profile-skeleton { display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem 0 1rem; }
+    .skel { background: linear-gradient(90deg, #1e1e1e 25%, #2a2a2a 50%, #1e1e1e 75%); background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; height: 40px; }
+    .skel-row { width: 100%; }
+    .skel-short { width: 55%; height: 36px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
     .card-heading {
       display: flex;
       align-items: center;
@@ -511,6 +524,7 @@ export class ProfileComponent implements OnInit {
   saveSuccess = signal(false);
   saveError = signal('');
   loadingTargets = signal(true);
+  loadingProfile = signal(true);
 
   readonly KCAL_CIRCUMFERENCE = 2 * Math.PI * 52;
 
@@ -546,13 +560,18 @@ export class ProfileComponent implements OnInit {
   });
 
   ngOnInit() {
-    this.profileSvc.getProfile().subscribe({
-      next: p => Object.assign(this.form, p),
-      error: () => {},
-    });
+    this.loadProfile();
     this.profileSvc.getTargets().subscribe({
       next: t => { this.targets.set(t); this.loadingTargets.set(false); },
       error: () => this.loadingTargets.set(false),
+    });
+  }
+
+  private loadProfile() {
+    this.loadingProfile.set(true);
+    this.profileSvc.getProfile().subscribe({
+      next: p => { Object.assign(this.form, p); this.loadingProfile.set(false); },
+      error: () => this.loadingProfile.set(false),
     });
   }
 
@@ -562,7 +581,8 @@ export class ProfileComponent implements OnInit {
     this.saveError.set('');
 
     this.profileSvc.saveProfile(this.form).subscribe({
-      next: () => {
+      next: saved => {
+        Object.assign(this.form, saved);
         this.profileSvc.getTargets().subscribe({
           next: t => this.targets.set(t),
           error: () => {},
