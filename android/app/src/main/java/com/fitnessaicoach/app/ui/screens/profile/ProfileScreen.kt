@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -57,15 +58,15 @@ import com.fitnessaicoach.app.ui.theme.TextPrimary
 private val sexOptions = listOf("MALE" to "Hombre", "FEMALE" to "Mujer")
 private val activityOptions = listOf(
     "SEDENTARY" to "Sedentario",
-    "LIGHT" to "Ligero",
-    "MODERATE" to "Moderado",
-    "ACTIVE" to "Activo",
-    "VERY_ACTIVE" to "Muy activo",
+    "LIGHTLY_ACTIVE" to "Ligero",
+    "MODERATELY_ACTIVE" to "Moderado",
+    "VERY_ACTIVE" to "Activo",
+    "EXTRA_ACTIVE" to "Muy activo",
 )
 private val goalOptions = listOf(
-    "LOSE_WEIGHT" to "Perder grasa",
+    "LOSE" to "Perder grasa",
     "MAINTAIN" to "Mantener",
-    "GAIN_MUSCLE" to "Ganar masa",
+    "GAIN" to "Ganar masa",
 )
 private val dietOptions = listOf(
     "STANDARD" to "Estandar",
@@ -204,6 +205,20 @@ fun ProfileScreen(
                         viewModel.saveProfile()
                     },
                 )
+
+                OutlinedButton(
+                        onClick = {
+                            viewModel.logout()
+                            navController.navigate(com.fitnessaicoach.app.navigation.Screen.Login.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
+                        modifier = androidx.compose.ui.Modifier.fillMaxWidth(),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, com.fitnessaicoach.app.ui.theme.Danger),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                    ) {
+                        Text("Cerrar sesión", color = com.fitnessaicoach.app.ui.theme.Danger)
+                    }
 
                 Spacer(Modifier.height(12.dp))
             }
