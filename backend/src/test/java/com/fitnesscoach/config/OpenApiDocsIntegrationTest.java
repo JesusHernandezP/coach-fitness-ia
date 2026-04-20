@@ -11,7 +11,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(
     properties = {
-      "DB_URL=jdbc:postgresql://localhost:5432/fitnesscoach",
       "DB_USER=postgres",
       "DB_PASSWORD=changeme",
       "JWT_SECRET=test-secret",
