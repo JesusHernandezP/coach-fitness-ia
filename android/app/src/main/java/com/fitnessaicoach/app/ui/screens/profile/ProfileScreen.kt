@@ -29,6 +29,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -90,6 +93,13 @@ fun ProfileScreen(
     var navigateAfterSave by remember { mutableStateOf(false) }
 
     val effectiveOnboarding = forceOnboarding || isOnboarding
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.reloadProfile()
+        }
+    }
 
     LaunchedEffect(saveState, navigateAfterSave) {
         if (saveState is UiState.Success && navigateAfterSave) {
