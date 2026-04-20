@@ -34,13 +34,9 @@ jobs:
       - name: Grant execute permission
         run: chmod +x android/gradlew
 
-      - name: ktlint check
+      - name: Lint
         working-directory: android
-        run: ./gradlew ktlintCheck
-
-      - name: detekt
-        working-directory: android
-        run: ./gradlew detekt
+        run: ./gradlew lintDebug
 
       - name: Unit tests
         working-directory: android
