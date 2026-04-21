@@ -367,7 +367,7 @@ export class RegisterComponent {
     this.loading.set(true);
     this.error.set('');
     this.auth.register(this.email, this.password).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => this.router.navigate(['/profile']),
       error: (err) => {
         this.error.set(err.error?.message ?? 'Error al registrar. Intenta de nuevo.');
         this.loading.set(false);
