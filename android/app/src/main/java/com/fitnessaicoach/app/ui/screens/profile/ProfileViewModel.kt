@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitnessaicoach.app.data.network.MetabolicProfile
 import com.fitnessaicoach.app.data.network.NutritionTarget
+import com.fitnessaicoach.app.data.repository.DashboardRepository
 import com.fitnessaicoach.app.data.repository.ProfileRepository
 import com.fitnessaicoach.app.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -57,8 +58,11 @@ data class ProfileFormState(
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val repo: ProfileRepository,
+    private val dashboardRepo: DashboardRepository,
     private val authRepo: com.fitnessaicoach.app.data.repository.AuthRepository,
 ) : ViewModel() {
+
+    private var originalWeightKg: Double = 0.0
 
     private val _formState = MutableStateFlow(ProfileFormState())
     val formState: StateFlow<ProfileFormState> = _formState.asStateFlow()
@@ -85,6 +89,7 @@ class ProfileViewModel @Inject constructor(
             repo.getProfile()
                 .onSuccess { profile ->
                     _formState.value = ProfileFormState.fromProfile(profile)
+                    originalWeightKg = profile.currentWeightKg
                     _isOnboarding.value = false
                     loadTargets()
                 }
@@ -148,8 +153,14 @@ class ProfileViewModel @Inject constructor(
     fun saveProfile() {
         viewModelScope.launch {
             _saveState.value = UiState.Loading
+            val weightChanged = _formState.value.currentWeightKg != originalWeightKg
             repo.saveProfile(_formState.value.toMetabolicProfile())
                 .onSuccess { profile ->
+                    val newWeight = profile.currentWeightKg
+                    if (weightChanged && newWeight > 0) {
+                        dashboardRepo.addWeight(newWeight)
+                    }
+                    originalWeightKg = newWeight
                     _formState.value = ProfileFormState.fromProfile(profile)
                     _isOnboarding.value = false
                     _saveState.value = UiState.Success(Unit)
