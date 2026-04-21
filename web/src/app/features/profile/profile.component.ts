@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProfileService, MetabolicProfile, NutritionTarget } from './profile.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { DecimalPipe, DatePipe } from '@angular/common';
 
 const ACTIVITY_OPTS: { value: MetabolicProfile['activityLevel']; label: string; hint: string }[] = [
@@ -500,7 +501,10 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
 })
 export class ProfileComponent implements OnInit {
   private profileSvc = inject(ProfileService);
+  private dashSvc = inject(DashboardService);
   private auth = inject(AuthService);
+
+  private originalWeightKg = 0;
 
   activityOpts = ACTIVITY_OPTS;
   goalOpts = GOAL_OPTS;
@@ -571,7 +575,11 @@ export class ProfileComponent implements OnInit {
   private loadProfile() {
     this.loadingProfile.set(true);
     this.profileSvc.getProfile().subscribe({
-      next: p => { Object.assign(this.form, p); this.loadingProfile.set(false); },
+      next: p => {
+        Object.assign(this.form, p);
+        this.originalWeightKg = p.currentWeightKg;
+        this.loadingProfile.set(false);
+      },
       error: () => this.loadingProfile.set(false),
     });
   }
@@ -581,13 +589,18 @@ export class ProfileComponent implements OnInit {
     this.saveSuccess.set(false);
     this.saveError.set('');
 
+    const weightChanged = this.form.currentWeightKg !== this.originalWeightKg;
     this.profileSvc.saveProfile(this.form).subscribe({
       next: saved => {
         Object.assign(this.form, saved);
+        this.originalWeightKg = saved.currentWeightKg;
         this.profileSvc.getTargets().subscribe({
           next: t => this.targets.set(t),
           error: () => {},
         });
+        if (weightChanged && saved.currentWeightKg) {
+          this.dashSvc.addWeight({ weightKg: saved.currentWeightKg }).subscribe({ error: () => {} });
+        }
         this.saving.set(false);
         this.saveSuccess.set(true);
         setTimeout(() => this.saveSuccess.set(false), 4000);
