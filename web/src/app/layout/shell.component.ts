@@ -49,6 +49,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     .shell {
       display: flex;
       height: 100vh;
+      height: 100dvh;
       overflow: hidden;
     }
 
@@ -175,15 +176,25 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
     .content {
       flex: 1;
       overflow-y: auto;
+      overflow-x: hidden;
       padding: 2rem;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
     }
 
     /* ── Responsive ── */
     @media (max-width: 768px) {
       .sidebar { display: none; }
-      .topbar { display: flex; }
+      .topbar {
+        display: flex;
+        padding-top: env(safe-area-inset-top);
+        height: calc(52px + env(safe-area-inset-top));
+      }
       .shell { flex-direction: column; }
-      .content { padding: 1rem; }
+      .content {
+        padding: 1rem;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+      }
     }
   `],
 })
