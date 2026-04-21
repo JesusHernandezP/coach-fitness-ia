@@ -4,6 +4,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.graphics.SolidColor
 import kotlin.math.pow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -64,7 +66,8 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background),
+            .background(Background)
+            .imePadding(),
     ) {
         AuthBackground()
 
@@ -317,6 +320,7 @@ internal fun AuthTextField(
             enabled       = enabled,
             singleLine    = true,
             visualTransformation = visual,
+            cursorBrush   = SolidColor(Gold),
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType, imeAction = imeAction),
             keyboardActions = KeyboardActions(
                 onNext = { onNext?.invoke() },
