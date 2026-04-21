@@ -17,6 +17,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -98,7 +99,7 @@ class ProfileViewModelTest {
         whenever(repo.getProfile()).thenReturn(Result.failure(RuntimeException("404")))
         whenever(repo.saveProfile(any())).thenReturn(Result.success(savedProfile))
         whenever(repo.getTargets()).thenReturn(Result.success(targets))
-        whenever(dashboardRepo.addWeight(any())).thenReturn(Result.success(mock()))
+        whenever(dashboardRepo.addWeight(any(), anyOrNull())).thenReturn(Result.success(mock()))
 
         val viewModel = ProfileViewModel(repo, dashboardRepo, authRepo)
         advanceUntilIdle()
