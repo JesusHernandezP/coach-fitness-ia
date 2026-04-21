@@ -321,8 +321,14 @@ export class LoginComponent {
     this.error.set('');
     this.auth.login(this.email, this.password).subscribe({
       next: () => this.router.navigate(['/dashboard']),
-      error: () => {
-        this.error.set('Credenciales incorrectas. Verifica tu correo y contrasena.');
+      error: (err) => {
+        console.error('[login]', err);
+        const msg = err?.error?.message ?? err?.message;
+        this.error.set(
+          msg === 'Credenciales incorrectas'
+            ? 'Credenciales incorrectas. Verifica tu correo y contrasena.'
+            : (msg ?? 'Error al iniciar sesion. Intenta de nuevo.')
+        );
         this.loading.set(false);
       },
     });
