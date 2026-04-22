@@ -3,6 +3,7 @@ package com.fitnessaicoach.app.ui.screens.profile
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -114,7 +115,8 @@ fun ProfileScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Background),
+            .background(Background)
+            .imePadding(),
     ) {
         DiagonalAccent()
 
@@ -174,6 +176,7 @@ fun ProfileScreen(
                                 value = formState.dailySteps.asText(),
                                 onValueChange = viewModel::updateDailySteps,
                                 modifier = Modifier.weight(1f),
+                                placeholder = "Opcional",
                             )
                         }
 
@@ -292,6 +295,7 @@ private fun ProfileNumberField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     decimal: Boolean = false,
+    placeholder: String? = null,
 ) {
     Column(modifier = modifier) {
         Text(
@@ -309,6 +313,7 @@ private fun ProfileNumberField(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp),
             colors = profileFieldColors(),
+            placeholder = placeholder?.let { { Text(it, color = TextMuted) } },
             keyboardOptions = KeyboardOptions(
                 keyboardType = if (decimal) KeyboardType.Decimal else KeyboardType.Number,
             ),

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProfileService, MetabolicProfile, NutritionTarget } from './profile.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { DashboardService } from '../dashboard/dashboard.service';
 import { DecimalPipe, DatePipe } from '@angular/common';
 
 const ACTIVITY_OPTS: { value: MetabolicProfile['activityLevel']; label: string; hint: string }[] = [
@@ -37,7 +38,6 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
           <p class="page-eyebrow">Mi cuenta</p>
           <h1 class="page-title">Perfil &amp; Objetivos</h1>
         </div>
-        <button class="btn btn-danger" (click)="logout()">Cerrar sesión</button>
       </header>
 
       <div class="profile-grid">
@@ -130,35 +130,6 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
             </div>
           </div>
 
-          <div class="card form-card" style="--anim-delay:0.16s">
-            <h2 class="card-heading">
-              <span class="card-heading-line"></span>
-              Actividad diaria <span class="optional-badge">Opcional</span>
-            </h2>
-            <div class="form-row">
-              <div class="field">
-                <label class="label">Días ejercicio/sem</label>
-                <input class="input" type="number" [(ngModel)]="form.weeklyExerciseDays" name="exerciseDays" min="0" max="7" placeholder="3" />
-              </div>
-              <div class="field">
-                <label class="label">Minutos/sesión</label>
-                <input class="input" type="number" [(ngModel)]="form.exerciseMinutes" name="exerciseMin" min="0" max="300" placeholder="45" />
-              </div>
-              <div class="field">
-                <label class="label">Pasos diarios</label>
-                <input class="input" type="number" [(ngModel)]="form.dailySteps" name="steps" min="0" max="50000" placeholder="8000" />
-              </div>
-            </div>
-          </div>
-
-          <button class="btn btn-primary btn-save" (click)="save()" [disabled]="saving()">
-            @if (saving()) {
-              <span class="spinner"></span> Guardando...
-            } @else {
-              Guardar perfil
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            }
-          </button>
         </section>
 
         <!-- ── RIGHT: Macros ── -->
@@ -263,6 +234,18 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
             </div>
           }
         </aside>
+
+        <div class="actions-bar">
+          <button class="btn btn-primary btn-save" (click)="save()" [disabled]="saving()">
+            @if (saving()) {
+              <span class="spinner"></span> Guardando...
+            } @else {
+              Guardar perfil
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            }
+          </button>
+          <button class="btn btn-danger btn-logout" (click)="logout()">Cerrar sesión</button>
+        </div>
       </div>
     </div>
   `,
@@ -406,6 +389,23 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
     .act-label { font-size: 0.78rem; font-weight: 600; }
     .act-hint  { font-size: 0.65rem; opacity: 0.6; }
 
+    .actions-bar {
+      display: flex;
+      gap: 1rem;
+      grid-column: 1;
+      align-self: start;
+    }
+    .actions-bar .btn {
+      flex: 1;
+      justify-content: center;
+      min-width: 0;
+    }
+    .btn-logout {
+      padding: 0.8rem 2rem;
+      font-size: 0.9rem;
+      border-radius: 10px;
+    }
+
     .btn-save {
       padding: 0.8rem 2rem;
       font-size: 0.9rem;
@@ -492,14 +492,19 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
 
     @media (max-width: 900px) {
       .profile-grid { grid-template-columns: 1fr; }
-      .macros-section { position: static; }
+      .macros-section { position: static; order: 2; }
+      .form-section   { order: 1; }
+      .actions-bar    { order: 3; grid-column: 1; }
       .form-row { grid-template-columns: repeat(2, 1fr); }
     }
   `],
 })
 export class ProfileComponent implements OnInit {
   private profileSvc = inject(ProfileService);
+  private dashSvc = inject(DashboardService);
   private auth = inject(AuthService);
+
+  private originalWeightKg = 0;
 
   activityOpts = ACTIVITY_OPTS;
   goalOpts = GOAL_OPTS;
@@ -570,7 +575,11 @@ export class ProfileComponent implements OnInit {
   private loadProfile() {
     this.loadingProfile.set(true);
     this.profileSvc.getProfile().subscribe({
-      next: p => { Object.assign(this.form, p); this.loadingProfile.set(false); },
+      next: p => {
+        Object.assign(this.form, p);
+        this.originalWeightKg = p.currentWeightKg;
+        this.loadingProfile.set(false);
+      },
       error: () => this.loadingProfile.set(false),
     });
   }
@@ -580,13 +589,18 @@ export class ProfileComponent implements OnInit {
     this.saveSuccess.set(false);
     this.saveError.set('');
 
+    const weightChanged = this.form.currentWeightKg !== this.originalWeightKg;
     this.profileSvc.saveProfile(this.form).subscribe({
       next: saved => {
         Object.assign(this.form, saved);
+        this.originalWeightKg = saved.currentWeightKg;
         this.profileSvc.getTargets().subscribe({
           next: t => this.targets.set(t),
           error: () => {},
         });
+        if (weightChanged && saved.currentWeightKg) {
+          this.dashSvc.addWeight({ weightKg: saved.currentWeightKg }).subscribe({ error: () => {} });
+        }
         this.saving.set(false);
         this.saveSuccess.set(true);
         setTimeout(() => this.saveSuccess.set(false), 4000);
