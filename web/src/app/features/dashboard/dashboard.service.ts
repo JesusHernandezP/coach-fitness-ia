@@ -45,6 +45,16 @@ export interface AdherencePoint {
   targetCalories: number | null;
   adherencePct: number | null;
 }
+export interface WeeklyReview {
+  periodStart: string;
+  periodEnd: string;
+  summary: string;
+  nutritionFindings: string[];
+  activityFindings: string[];
+  weightFindings: string[];
+  recommendations: string[];
+  riskNotes: string[];
+}
 
 export interface AddWeightReq    { weightKg: number; loggedAt?: string; }
 export interface AddActivityReq  { date: string; steps?: number; caloriesBurned?: number; notes?: string; }
@@ -103,6 +113,10 @@ export class DashboardService {
 
   reloadAdherenceTrend(days = 30) {
     return this.http.get<AdherencePoint[]>(`${this.base}/dashboard/adherence?days=${days}`);
+  }
+
+  generateWeeklyReview() {
+    return this.http.get<WeeklyReview>(`${this.base}/coach/weekly-review`);
   }
 
   reloadWeeklyActivities() {

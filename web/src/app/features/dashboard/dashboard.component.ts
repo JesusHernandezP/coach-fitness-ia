@@ -9,6 +9,7 @@ import {
   DashboardService,
   NutritionTrendPoint,
   TodaySnapshot,
+  WeeklyReview,
   WeeklyKpis,
   WeightPoint,
 } from './dashboard.service';
@@ -104,6 +105,58 @@ const today = () => new Date().toISOString().slice(0, 10);
             <strong>{{ weeklyKpisData()?.caloricAdherencePct ?? 0 | number:'1.0-0' }}%</strong>
             <small>calórica semanal</small>
           </article>
+        </div>
+
+        <div class="panel-card weekly-review-card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Semana</p>
+              <h3>Revisión semanal IA</h3>
+            </div>
+            <button class="btn" (click)="generateWeeklyReview()" [disabled]="weeklyReviewLoading()">
+              {{ weeklyReviewLoading() ? 'Generando...' : 'Generar revisión' }}
+            </button>
+          </div>
+
+          @if (weeklyReview(); as review) {
+            <div class="review-period">{{ review.periodStart }} → {{ review.periodEnd }}</div>
+            <p class="review-summary">{{ review.summary }}</p>
+            <div class="review-grid">
+              <div>
+                <span class="review-label">Nutrición</span>
+                @for (item of review.nutritionFindings; track item) {
+                  <p class="review-item">{{ item }}</p>
+                }
+              </div>
+              <div>
+                <span class="review-label">Actividad</span>
+                @for (item of review.activityFindings; track item) {
+                  <p class="review-item">{{ item }}</p>
+                }
+              </div>
+              <div>
+                <span class="review-label">Peso</span>
+                @for (item of review.weightFindings; track item) {
+                  <p class="review-item">{{ item }}</p>
+                }
+              </div>
+              <div>
+                <span class="review-label">Recomendaciones</span>
+                @for (item of review.recommendations; track item) {
+                  <p class="review-item">{{ item }}</p>
+                }
+              </div>
+            </div>
+            @if (review.riskNotes.length) {
+              <div class="review-risks">
+                @for (item of review.riskNotes; track item) {
+                  <p>{{ item }}</p>
+                }
+              </div>
+            }
+          } @else {
+            <div class="empty compact">Genera una revisión para resumir la semana con IA.</div>
+          }
         </div>
 
       </section>
@@ -263,6 +316,7 @@ const today = () => new Date().toISOString().slice(0, 10);
     .kpi-label { display: block; color: #7a7a7a; text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.12em; margin-bottom: 0.45rem; }
     .evolution-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
     .journal-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 1rem; }
+    .weekly-review-card { margin-top: 0.25rem; }
     .chart-wrap { height: 260px; }
     .empty { min-height: 220px; display: grid; place-items: center; color: #6f6f6f; background: rgba(255,255,255,0.02); border-radius: 14px; }
     .empty.compact { min-height: 100px; }
@@ -301,12 +355,26 @@ const today = () => new Date().toISOString().slice(0, 10);
       background: #121212; border: 1px solid #232323; border-radius: 14px; padding: 0.85rem 0.9rem; color: #efefef;
     }
     .log-row span { color: #d4b200; white-space: nowrap; }
+    .review-period { color: #8a8a8a; font-size: 0.8rem; margin-bottom: 0.65rem; }
+    .review-summary { color: #f1f1ec; line-height: 1.6; margin-bottom: 1rem; }
+    .review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; }
+    .review-label {
+      display: block; color: #d4b200; font-size: 0.72rem; text-transform: uppercase;
+      letter-spacing: 0.12em; margin-bottom: 0.35rem;
+    }
+    .review-item { color: #d8d8d8; font-size: 0.88rem; line-height: 1.5; margin: 0 0 0.35rem; }
+    .review-risks {
+      margin-top: 0.8rem; padding: 0.9rem; border-radius: 14px;
+      background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.18); color: #f2b37b;
+    }
+    .review-risks p { margin: 0 0 0.35rem; }
+    .review-risks p:last-child { margin-bottom: 0; }
     @media (max-width: 1100px) {
       .kpi-grid-today, .kpi-grid, .evolution-grid, .journal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 760px) {
       .page-header, .section-heading, .card-head, .nutrition-summary { flex-direction: column; align-items: flex-start; }
-      .kpi-grid-today, .kpi-grid, .evolution-grid, .journal-grid, .form-grid { grid-template-columns: 1fr; }
+      .kpi-grid-today, .kpi-grid, .evolution-grid, .journal-grid, .form-grid, .review-grid { grid-template-columns: 1fr; }
       .chart-wrap { height: 220px; }
     }
   `],
@@ -325,10 +393,12 @@ export class DashboardComponent implements OnInit {
   adherenceTrendData = signal<AdherencePoint[]>([]);
   dailyNutrition = signal<DailyNutritionSummary | null>(null);
   todayFoodLogs = signal<FoodLog[]>([]);
+  weeklyReview = signal<WeeklyReview | null>(null);
 
   addingWeight = signal(false);
   savingActivity = signal(false);
   savingFood = signal(false);
+  weeklyReviewLoading = signal(false);
 
   newWeight: number | null = null;
   actForm = { date: today(), steps: null as number | null, caloriesBurned: null as number | null, notes: '' };
@@ -505,6 +575,17 @@ export class DashboardComponent implements OnInit {
         this.reloadNutrition();
       },
       error: () => this.savingFood.set(false),
+    });
+  }
+
+  generateWeeklyReview() {
+    this.weeklyReviewLoading.set(true);
+    this.svc.generateWeeklyReview().subscribe({
+      next: review => {
+        this.weeklyReview.set(review);
+        this.weeklyReviewLoading.set(false);
+      },
+      error: () => this.weeklyReviewLoading.set(false),
     });
   }
 
