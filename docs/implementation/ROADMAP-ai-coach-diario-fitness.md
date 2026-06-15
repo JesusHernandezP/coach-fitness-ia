@@ -36,6 +36,53 @@ feature/t-34-ai-weekly-review
 
 Cada rama debe abrir PR hacia `main`, pasar CI y desplegar en Render/Vercel si aplica.
 
+## Instrucciones obligatorias para agentes
+
+Antes de implementar cualquier ticket, el agente debe leer este roadmap y el spec del ticket concreto. No debe implementar varios tickets a la vez.
+
+Flujo obligatorio al comenzar:
+
+```text
+git checkout main
+git pull --ff-only origin main
+git checkout -b feature/t-XX-nombre-del-ticket
+```
+
+Reglas:
+
+- Implementar solo el ticket solicitado.
+- No adelantar dependencias de tickets futuros salvo que el spec lo pida explicitamente.
+- No mezclar refactors no relacionados.
+- No modificar secretos ni archivos `.env` reales.
+- Toda tabla nueva debe ir en una migracion Flyway nueva.
+- Todo endpoint nuevo debe tener DTOs claros, validacion, seguridad por usuario y Swagger/OpenAPI.
+- Si un cambio toca Web o Android, mantener compatibilidad con el backend desplegado o documentar la dependencia del PR.
+- Antes de finalizar, ejecutar las pruebas indicadas en el spec del ticket.
+- Si alguna prueba no puede ejecutarse localmente, explicar el motivo exacto en el cierre del trabajo.
+
+Flujo obligatorio al terminar:
+
+```text
+git status
+git add <archivos-del-ticket>
+git commit -m "<conventional-commit>"
+git push -u origin feature/t-XX-nombre-del-ticket
+```
+
+Luego abrir PR hacia `main`. No hacer push directo a `main`, porque la rama esta protegida.
+
+Plantilla recomendada para pedir implementacion a un agente:
+
+```text
+Implementa T-XX siguiendo docs/implementation/T-XX-archivo.md.
+
+Trabaja en una rama feature/t-XX-nombre desde main.
+No implementes otros tickets.
+Ejecuta las pruebas indicadas en el spec.
+Haz commit con Conventional Commit.
+Sube la rama y deja listo el PR hacia main.
+```
+
 ## Reglas generales
 
 - No mezclar tickets funcionales en un mismo PR.
@@ -80,4 +127,3 @@ Android:
 ```
 
 Si un ticket toca solo una capa, ejecutar al menos esa capa y documentar lo no ejecutado.
-
