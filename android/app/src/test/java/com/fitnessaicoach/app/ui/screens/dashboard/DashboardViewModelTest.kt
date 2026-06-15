@@ -46,10 +46,15 @@ class DashboardViewModelTest {
             weightDelta = -0.7,
         )
         val todaySnapshot = TodaySnapshot(
+            targetCalories = 2360.0,
+            consumedCalories = 1280.0,
+            remainingCalories = 1080.0,
+            targetProteinG = 160.0,
+            consumedProteinG = 92.0,
+            remainingProteinG = 68.0,
             steps = 8123,
             caloriesBurned = 410,
             currentWeightKg = 81.7,
-            targetCalories = 2360.0,
         )
         val nutrition = DailyNutritionSummaryDto(
             date = "2026-04-18",
@@ -111,16 +116,26 @@ class DashboardViewModelTest {
             weightDelta = -0.5,
         )
         val initialTodaySnapshot = TodaySnapshot(
+            targetCalories = null,
+            consumedCalories = 0.0,
+            remainingCalories = null,
+            targetProteinG = null,
+            consumedProteinG = 0.0,
+            remainingProteinG = null,
             steps = 0,
             caloriesBurned = 0,
             currentWeightKg = null,
-            targetCalories = null,
         )
         val updatedTodaySnapshot = TodaySnapshot(
+            targetCalories = null,
+            consumedCalories = 0.0,
+            remainingCalories = null,
+            targetProteinG = null,
+            consumedProteinG = 0.0,
+            remainingProteinG = null,
             steps = 7000,
             caloriesBurned = 350,
             currentWeightKg = null,
-            targetCalories = null,
         )
         whenever(repo.weightProgress()).thenReturn(Result.success(emptyList()))
         whenever(repo.weeklySummary())
@@ -188,7 +203,21 @@ class DashboardViewModelTest {
     fun `loadDashboard exposes error when repository fails`() = runTest {
         whenever(repo.weightProgress()).thenReturn(Result.failure(RuntimeException("sin red")))
         whenever(repo.weeklySummary()).thenReturn(Result.success(WeeklySummary(0, 0, 0, 0.0, null)))
-        whenever(repo.today()).thenReturn(Result.success(TodaySnapshot(0, 0, null, null)))
+        whenever(repo.today()).thenReturn(
+            Result.success(
+                TodaySnapshot(
+                    targetCalories = null,
+                    consumedCalories = 0.0,
+                    remainingCalories = null,
+                    targetProteinG = null,
+                    consumedProteinG = 0.0,
+                    remainingProteinG = null,
+                    steps = 0,
+                    caloriesBurned = 0,
+                    currentWeightKg = null,
+                ),
+            ),
+        )
         whenever(repo.todayNutrition()).thenReturn(
             Result.success(
                 DailyNutritionSummaryDto(

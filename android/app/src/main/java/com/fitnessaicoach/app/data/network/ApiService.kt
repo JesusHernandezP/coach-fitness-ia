@@ -66,10 +66,15 @@ data class WeeklySummary(
 
 @JsonClass(generateAdapter = true)
 data class TodaySnapshot(
+    @Json(name = "targetCalories")      val targetCalories: Double?,
+    @Json(name = "consumedCalories")    val consumedCalories: Double,
+    @Json(name = "remainingCalories")   val remainingCalories: Double?,
+    @Json(name = "targetProteinG")      val targetProteinG: Double?,
+    @Json(name = "consumedProteinG")    val consumedProteinG: Double,
+    @Json(name = "remainingProteinG")   val remainingProteinG: Double?,
     @Json(name = "steps")               val steps: Long,
     @Json(name = "caloriesBurned")      val caloriesBurned: Long,
     @Json(name = "currentWeightKg")     val currentWeightKg: Double?,
-    @Json(name = "targetCalories")      val targetCalories: Double?,
 )
 
 // ── Nutrition journal ─────────────────────────────────────────

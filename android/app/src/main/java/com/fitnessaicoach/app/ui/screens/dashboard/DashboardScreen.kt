@@ -302,8 +302,16 @@ private fun WeeklySummaryCard(summary: WeeklySummary) {
 private fun TodaySummarySection(today: TodaySnapshot, weeklySummary: WeeklySummary) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard("Pasos hoy", today.steps.toString(), "objetivo diario", Success, Modifier.weight(1f))
-            MetricCard("Kcal hoy", today.caloriesBurned.toString(), "actividad", Info, Modifier.weight(1f))
+            MetricCard("Kcal hoy", today.consumedCalories.toInt().toString(), "consumidas", Gold, Modifier.weight(1f))
+            MetricCard("Prote hoy", today.consumedProteinG.toInt().toString(), "gramos", Success, Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MetricCard("Pasos hoy", today.steps.toString(), "actividad", Info, Modifier.weight(1f))
+            MetricCard("Restan", (today.remainingCalories ?: 0.0).toInt().toString(), "kcal objetivo", Gold, Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MetricCard("Kcal activas", today.caloriesBurned.toString(), "registradas", Info, Modifier.weight(1f))
+            MetricCard("Peso", today.currentWeightKg?.toPrettyNumber()?.plus(" kg") ?: "--", "actual", Gold, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricCard("Delta 7d", weeklySummary.weightDelta?.toPrettySigned() ?: "--", "peso", Gold, Modifier.weight(1f))
