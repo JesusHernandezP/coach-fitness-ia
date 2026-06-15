@@ -82,7 +82,9 @@ public class DashboardService {
         remaining(targetProtein, consumedProtein),
         steps,
         calsBurned,
-        currentWeight);
+        currentWeight,
+        todayLog != null ? todayLog.getSource() : null,
+        todayLog != null ? todayLog.getSyncedAt() : null);
   }
 
   public WeeklyKpisSnapshot weeklyKpis(Long userId) {

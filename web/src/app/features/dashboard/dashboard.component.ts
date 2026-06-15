@@ -52,7 +52,7 @@ const today = () => new Date().toISOString().slice(0, 10);
           <article class="kpi-card">
             <span class="kpi-label">Pasos</span>
             <strong>{{ todayData()?.steps ?? 0 | number }}</strong>
-            <small>actividad del día</small>
+            <small>{{ todayData()?.activitySource === 'health_connect' ? 'sincronizado desde Health Connect' : 'actividad del día' }}</small>
           </article>
           <article class="kpi-card">
             <span class="kpi-label">Kcal activas</span>

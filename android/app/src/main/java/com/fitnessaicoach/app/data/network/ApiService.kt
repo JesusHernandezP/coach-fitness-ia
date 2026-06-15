@@ -1,18 +1,14 @@
 package com.fitnessaicoach.app.data.network
 
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
 import retrofit2.http.*
 
 // ── Auth ───────────────────────────────────────────────────────
-@JsonClass(generateAdapter = true)
 data class AuthRequest(@Json(name = "email") val email: String, @Json(name = "password") val password: String)
 
-@JsonClass(generateAdapter = true)
 data class AuthResponse(@Json(name = "token") val token: String)
 
 // ── Profile ────────────────────────────────────────────────────
-@JsonClass(generateAdapter = true)
 data class MetabolicProfile(
     @Json(name = "age")                val age: Int,
     @Json(name = "sex")                val sex: String,
@@ -26,7 +22,6 @@ data class MetabolicProfile(
     @Json(name = "dailySteps")         val dailySteps: Int? = null,
 )
 
-@JsonClass(generateAdapter = true)
 data class NutritionTarget(
     @Json(name = "calories")      val calories: Double,
     @Json(name = "proteinG")      val proteinG: Double,
@@ -36,26 +31,23 @@ data class NutritionTarget(
 )
 
 // ── Weight ─────────────────────────────────────────────────────
-@JsonClass(generateAdapter = true)
 data class WeightLogRequest(@Json(name = "weightKg") val weightKg: Double, @Json(name = "loggedAt") val loggedAt: String? = null)
 
-@JsonClass(generateAdapter = true)
 data class WeightLog(@Json(name = "id") val id: Long, @Json(name = "weightKg") val weightKg: Double, @Json(name = "loggedAt") val loggedAt: String)
 
 // ── Activity ───────────────────────────────────────────────────
-@JsonClass(generateAdapter = true)
 data class ActivityLogRequest(
     @Json(name = "date")            val date: String,
     @Json(name = "steps")           val steps: Int? = null,
     @Json(name = "caloriesBurned")  val caloriesBurned: Int? = null,
     @Json(name = "notes")           val notes: String? = null,
+    @Json(name = "source")          val source: String? = null,
+    @Json(name = "syncedAt")        val syncedAt: String? = null,
 )
 
 // ── Dashboard ──────────────────────────────────────────────────
-@JsonClass(generateAdapter = true)
 data class WeightPoint(@Json(name = "loggedAt") val loggedAt: String, @Json(name = "weightKg") val weightKg: Double)
 
-@JsonClass(generateAdapter = true)
 data class WeeklySummary(
     @Json(name = "stepsTotal")          val stepsTotal: Long,
     @Json(name = "caloriesBurnedTotal") val caloriesBurnedTotal: Long,
@@ -64,7 +56,6 @@ data class WeeklySummary(
     @Json(name = "weightDelta")         val weightDelta: Double?,
 )
 
-@JsonClass(generateAdapter = true)
 data class TodaySnapshot(
     @Json(name = "targetCalories")      val targetCalories: Double?,
     @Json(name = "consumedCalories")    val consumedCalories: Double,
@@ -75,10 +66,11 @@ data class TodaySnapshot(
     @Json(name = "steps")               val steps: Long,
     @Json(name = "caloriesBurned")      val caloriesBurned: Long,
     @Json(name = "currentWeightKg")     val currentWeightKg: Double?,
+    @Json(name = "activitySource")      val activitySource: String? = null,
+    @Json(name = "activitySyncedAt")    val activitySyncedAt: String? = null,
 )
 
 // ── Nutrition journal ─────────────────────────────────────────
-@JsonClass(generateAdapter = true)
 data class FoodLogRequest(
     @Json(name = "date") val date: String,
     @Json(name = "mealType") val mealType: String,
@@ -90,7 +82,6 @@ data class FoodLogRequest(
     @Json(name = "source") val source: String = "manual",
 )
 
-@JsonClass(generateAdapter = true)
 data class FoodLogDto(
     @Json(name = "id") val id: Long,
     @Json(name = "date") val date: String,
@@ -102,7 +93,6 @@ data class FoodLogDto(
     @Json(name = "fatG") val fatG: Double? = null,
 )
 
-@JsonClass(generateAdapter = true)
 data class DailyNutritionSummaryDto(
     @Json(name = "date") val date: String,
     @Json(name = "targetCalories") val targetCalories: Double? = null,
@@ -122,10 +112,8 @@ data class DailyNutritionSummaryDto(
 )
 
 // ── Chat ───────────────────────────────────────────────────────
-@JsonClass(generateAdapter = true)
 data class Conversation(@Json(name = "id") val id: Long, @Json(name = "title") val title: String, @Json(name = "createdAt") val createdAt: String)
 
-@JsonClass(generateAdapter = true)
 data class ChatMessageDto(
     @Json(name = "id")         val id: Long,
     @Json(name = "role")       val role: String,
@@ -133,8 +121,14 @@ data class ChatMessageDto(
     @Json(name = "createdAt")  val createdAt: String,
 )
 
-@JsonClass(generateAdapter = true)
 data class SendMessageRequest(@Json(name = "content") val content: String)
+
+data class DailyHealthSyncRequest(
+    @Json(name = "date") val date: String,
+    @Json(name = "steps") val steps: Int,
+    @Json(name = "caloriesBurned") val caloriesBurned: Int,
+    @Json(name = "source") val source: String = "health_connect",
+)
 
 // ── API interface ──────────────────────────────────────────────
 interface ApiService {
@@ -175,6 +169,9 @@ interface ApiService {
 
     @GET("activities/today")
     suspend fun getToday(): ActivityLogRequest
+
+    @POST("health-sync/daily-activity")
+    suspend fun syncDailyActivity(@Body req: DailyHealthSyncRequest): ActivityLogRequest
 
     // Dashboard
     @GET("dashboard/weight-progress")

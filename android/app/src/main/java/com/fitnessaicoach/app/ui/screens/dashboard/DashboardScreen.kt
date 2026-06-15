@@ -1,5 +1,6 @@
 package com.fitnessaicoach.app.ui.screens.dashboard
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -31,6 +33,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.StepsRecord
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -49,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.fitnessaicoach.app.data.health.HealthConnectAvailability
 import com.fitnessaicoach.app.navigation.Screen
 import com.fitnessaicoach.app.data.network.DailyNutritionSummaryDto
 import com.fitnessaicoach.app.data.network.FoodLogDto
@@ -67,6 +75,7 @@ import com.fitnessaicoach.app.ui.theme.Surface
 import com.fitnessaicoach.app.ui.theme.Surface2
 import com.fitnessaicoach.app.ui.theme.TextMuted
 import com.fitnessaicoach.app.ui.theme.TextPrimary
+import kotlinx.coroutines.launch
 
 @Composable
 fun DashboardScreen(
@@ -76,9 +85,22 @@ fun DashboardScreen(
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
     val foodFormState by viewModel.foodFormState.collectAsStateWithLifecycle()
     val foodSubmitState by viewModel.foodSubmitState.collectAsStateWithLifecycle()
+    val healthSyncState by viewModel.healthSyncState.collectAsStateWithLifecycle()
+    val healthAvailability by viewModel.healthAvailability.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) {
+        scope.launch {
+            if (viewModel.hasHealthPermissions()) {
+                viewModel.syncTodayFromHealthConnect()
+            }
+        }
+    }
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.refreshHealthAvailability()
             viewModel.loadDashboard()
         }
     }
@@ -127,6 +149,8 @@ fun DashboardScreen(
                     content = state.data,
                     foodFormState = foodFormState,
                     foodSubmitState = foodSubmitState,
+                    healthSyncState = healthSyncState,
+                    healthAvailability = healthAvailability,
                     onFoodMealTypeChange = viewModel::updateFoodMealType,
                     onFoodDescriptionChange = viewModel::updateFoodDescription,
                     onFoodCaloriesChange = viewModel::updateFoodCalories,
@@ -134,6 +158,15 @@ fun DashboardScreen(
                     onFoodCarbsChange = viewModel::updateFoodCarbs,
                     onFoodFatChange = viewModel::updateFoodFat,
                     onFoodSubmit = viewModel::submitFoodLog,
+                    onHealthSync = {
+                        scope.launch {
+                            if (viewModel.hasHealthPermissions()) {
+                                viewModel.syncTodayFromHealthConnect()
+                            } else {
+                                permissionsLauncher.launch(healthPermissions())
+                            }
+                        }
+                    },
                 )
             }
 
@@ -148,6 +181,8 @@ private fun DashboardContentView(
     content: DashboardContent,
     foodFormState: FoodFormState,
     foodSubmitState: UiState<Unit>,
+    healthSyncState: UiState<String>,
+    healthAvailability: HealthConnectAvailability,
     onFoodMealTypeChange: (String) -> Unit,
     onFoodDescriptionChange: (String) -> Unit,
     onFoodCaloriesChange: (String) -> Unit,
@@ -155,6 +190,7 @@ private fun DashboardContentView(
     onFoodCarbsChange: (String) -> Unit,
     onFoodFatChange: (String) -> Unit,
     onFoodSubmit: () -> Unit,
+    onHealthSync: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -168,6 +204,7 @@ private fun DashboardContentView(
             onLogWeight = { navController.navigate(Screen.LogWeight.route) },
             onLogActivity = { navController.navigate(Screen.LogActivity.route) },
         )
+        HealthConnectCard(healthAvailability, healthSyncState, onHealthSync)
         WeightProgressCard(content.weightProgress)
         WeeklySummaryCard(content.weeklySummary)
         TodaySummarySection(content.todaySnapshot, content.weeklySummary)
@@ -185,6 +222,40 @@ private fun DashboardContentView(
             onSubmit = onFoodSubmit,
         )
         Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun HealthConnectCard(
+    availability: HealthConnectAvailability,
+    syncState: UiState<String>,
+    onSync: () -> Unit,
+) {
+    DashboardCard(title = "HEALTH CONNECT", subtitle = "Pasos y calorias desde tu reloj") {
+        val message = when (availability) {
+            HealthConnectAvailability.Available -> "Listo para sincronizar la actividad de hoy."
+            HealthConnectAvailability.NotInstalled -> "Health Connect no esta instalado o no esta disponible."
+            HealthConnectAvailability.UpdateRequired -> "Actualiza Health Connect para poder sincronizar."
+        }
+        Text(message, color = TextMuted, fontSize = 13.sp)
+        Spacer(Modifier.height(12.dp))
+        GoldButton(
+            text = if (syncState is UiState.Loading) "Sincronizando..." else "Sincronizar actividad",
+            enabled = availability == HealthConnectAvailability.Available && syncState !is UiState.Loading,
+            loading = syncState is UiState.Loading,
+            onClick = onSync,
+        )
+        when (syncState) {
+            is UiState.Success -> {
+                Spacer(Modifier.height(10.dp))
+                InlineBanner(syncState.data, true)
+            }
+            is UiState.Error -> {
+                Spacer(Modifier.height(10.dp))
+                InlineBanner(syncState.message, false)
+            }
+            else -> Unit
+        }
     }
 }
 
@@ -527,6 +598,11 @@ private fun InlineBanner(message: String, isSuccess: Boolean) {
         Text(message, color = accent, fontSize = 13.sp)
     }
 }
+
+private fun healthPermissions(): Set<String> = setOf(
+    HealthPermission.getReadPermission(StepsRecord::class),
+    HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
+)
 
 @Composable
 private fun EmptyState(message: String) {

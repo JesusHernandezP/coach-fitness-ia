@@ -25,6 +25,8 @@ export interface TodaySnapshot {
   steps: number;
   caloriesBurned: number;
   currentWeightKg: number | null;
+  activitySource: string | null;
+  activitySyncedAt: string | null;
 }
 export interface ActivityEntry { date: string; steps: number | null; caloriesBurned: number | null; }
 export interface NutritionTrendPoint {

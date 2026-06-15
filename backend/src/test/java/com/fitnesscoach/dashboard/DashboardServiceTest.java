@@ -90,6 +90,7 @@ class DashboardServiceTest {
     assertThat(snap.steps()).isEqualTo(0);
     assertThat(snap.caloriesBurned()).isEqualTo(0);
     assertThat(snap.currentWeightKg()).isNull();
+    assertThat(snap.activitySource()).isNull();
   }
 
   @Test

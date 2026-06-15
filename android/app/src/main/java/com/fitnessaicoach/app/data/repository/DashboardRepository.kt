@@ -1,5 +1,6 @@
 package com.fitnessaicoach.app.data.repository
 
+import com.fitnessaicoach.app.data.health.HealthConnectDailyActivity
 import com.fitnessaicoach.app.data.network.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -45,4 +46,16 @@ class DashboardRepository @Inject constructor(private val api: ApiService) {
     ): Result<Unit> = runCatching {
         api.logActivity(ActivityLogRequest(date, steps, caloriesBurned, notes))
     }
+
+    suspend fun syncDailyActivity(activity: HealthConnectDailyActivity): Result<ActivityLogRequest> =
+        runCatching {
+            api.syncDailyActivity(
+                DailyHealthSyncRequest(
+                    date = activity.date,
+                    steps = activity.steps,
+                    caloriesBurned = activity.caloriesBurned,
+                    source = activity.source,
+                ),
+            )
+        }
 }

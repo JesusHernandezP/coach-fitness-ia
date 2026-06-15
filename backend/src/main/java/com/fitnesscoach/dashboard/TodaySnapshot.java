@@ -1,5 +1,7 @@
 package com.fitnesscoach.dashboard;
 
+import java.time.Instant;
+
 public record TodaySnapshot(
     Double targetCalories,
     double consumedCalories,
@@ -9,4 +11,6 @@ public record TodaySnapshot(
     Double remainingProteinG,
     int steps,
     int caloriesBurned,
-    Double currentWeightKg) {}
+    Double currentWeightKg,
+    String activitySource,
+    Instant activitySyncedAt) {}

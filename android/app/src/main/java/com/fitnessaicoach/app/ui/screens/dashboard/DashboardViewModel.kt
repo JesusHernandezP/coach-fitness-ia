@@ -2,6 +2,8 @@ package com.fitnessaicoach.app.ui.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fitnessaicoach.app.data.health.HealthConnectAvailability
+import com.fitnessaicoach.app.data.health.HealthConnectSyncManager
 import com.fitnessaicoach.app.data.network.DailyNutritionSummaryDto
 import com.fitnessaicoach.app.data.network.FoodLogDto
 import com.fitnessaicoach.app.data.network.TodaySnapshot
@@ -49,13 +51,15 @@ data class FoodFormState(
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val repo: DashboardRepository,
+    private val healthConnectSyncManager: HealthConnectSyncManager,
 ) : ViewModel() {
     private var todayProvider: () -> String = { LocalDate.now().toString() }
 
     constructor(
         repo: DashboardRepository,
+        healthConnectSyncManager: HealthConnectSyncManager,
         todayProvider: () -> String,
-    ) : this(repo) {
+    ) : this(repo, healthConnectSyncManager) {
         this.todayProvider = todayProvider
         _formState.value = ActivityFormState(date = todayProvider())
         _foodFormState.value = FoodFormState(date = todayProvider())
@@ -75,6 +79,12 @@ class DashboardViewModel @Inject constructor(
 
     private val _foodSubmitState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val foodSubmitState: StateFlow<UiState<Unit>> = _foodSubmitState.asStateFlow()
+
+    private val _healthSyncState = MutableStateFlow<UiState<String>>(UiState.Idle)
+    val healthSyncState: StateFlow<UiState<String>> = _healthSyncState.asStateFlow()
+
+    private val _healthAvailability = MutableStateFlow(healthConnectSyncManager.availability())
+    val healthAvailability: StateFlow<HealthConnectAvailability> = _healthAvailability.asStateFlow()
 
     fun loadDashboard() {
         viewModelScope.launch {
@@ -186,6 +196,39 @@ class DashboardViewModel @Inject constructor(
 
     fun clearFoodSubmitState() {
         _foodSubmitState.value = UiState.Idle
+    }
+
+    fun refreshHealthAvailability() {
+        _healthAvailability.value = healthConnectSyncManager.availability()
+    }
+
+    suspend fun hasHealthPermissions(): Boolean = healthConnectSyncManager.hasPermissions()
+
+    fun syncTodayFromHealthConnect() {
+        viewModelScope.launch {
+            _healthSyncState.value = UiState.Loading
+            healthConnectSyncManager.readTodayActivity()
+                .fold(
+                    onSuccess = { activity ->
+                        repo.syncDailyActivity(activity)
+                            .onSuccess {
+                                _healthSyncState.value =
+                                    UiState.Success("Actividad sincronizada: ${activity.steps} pasos y ${activity.caloriesBurned} kcal.")
+                                loadDashboard()
+                            }
+                            .onFailure {
+                                _healthSyncState.value = UiState.Error(it.message ?: "No se pudo enviar la actividad al backend")
+                            }
+                    },
+                    onFailure = {
+                        _healthSyncState.value = UiState.Error(it.message ?: "No se pudo leer Health Connect")
+                    },
+                )
+        }
+    }
+
+    fun clearHealthSyncState() {
+        _healthSyncState.value = UiState.Idle
     }
 
     fun requireDashboardContent(): DashboardContent =
