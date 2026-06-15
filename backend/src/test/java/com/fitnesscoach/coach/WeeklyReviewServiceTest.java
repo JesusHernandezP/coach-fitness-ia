@@ -29,9 +29,9 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -46,16 +46,21 @@ class WeeklyReviewServiceTest {
   @Mock DashboardService dashboardService;
   @Mock GroqClient groqClient;
 
-  @InjectMocks WeeklyReviewService weeklyReviewService =
-      new WeeklyReviewService(
-          profileRepository,
-          targetRepository,
-          foodLogRepository,
-          activityLogRepository,
-          weightLogRepository,
-          dashboardService,
-          groqClient,
-          new ObjectMapper());
+  private WeeklyReviewService weeklyReviewService;
+
+  @BeforeEach
+  void setUp() {
+    weeklyReviewService =
+        new WeeklyReviewService(
+            profileRepository,
+            targetRepository,
+            foodLogRepository,
+            activityLogRepository,
+            weightLogRepository,
+            dashboardService,
+            groqClient,
+            new ObjectMapper());
+  }
 
   @Test
   void generatesReviewFromAiJsonWhenDataExists() {
@@ -114,12 +119,12 @@ class WeeklyReviewServiceTest {
   private MetabolicProfile profile() {
     return MetabolicProfile.builder()
         .age(30)
-        .sex(Sex.male)
+        .sex(Sex.MALE)
         .heightCm(175.0)
         .currentWeightKg(81.2)
-        .activityLevel(ActivityLevel.moderate)
-        .dietType(DietType.standard)
-        .goal(Goal.lose_weight)
+        .activityLevel(ActivityLevel.MODERATELY_ACTIVE)
+        .dietType(DietType.STANDARD)
+        .goal(Goal.LOSE_WEIGHT)
         .build();
   }
 

@@ -21,8 +21,9 @@ public class AiContextService {
   private final FoodLogService foodLogService;
   private final ActivityLogRepository activityLogRepository;
   private final WeightLogRepository weightLogRepository;
+  private final RagService ragService;
 
-  public AiContextSnapshot build(Long userId) {
+  public AiContextSnapshot build(Long userId, String userText) {
     StringBuilder prompt = new StringBuilder();
     var profileOpt = profileRepository.findByUserId(userId);
     if (profileOpt.isEmpty()) {
@@ -95,6 +96,11 @@ public class AiContextService {
             weight ->
                 prompt.append(
                     String.format("Peso mas reciente: %.1f kg. ", weight.getWeightKg())));
+
+    String ragContext = ragService.buildContext(userId, userText);
+    if (!ragContext.isBlank()) {
+      prompt.append(ragContext).append(' ');
+    }
 
     return new AiContextSnapshot(prompt.toString().trim(), true);
   }

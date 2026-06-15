@@ -22,6 +22,7 @@ public class AiCoachService {
   private final FoodEstimationService foodEstimationService;
   private final PendingAiActionService pendingAiActionService;
   private final FoodLogService foodLogService;
+  private final AiMemoryService aiMemoryService;
   private final GroqClient groqClient;
 
   public String answer(
@@ -30,7 +31,8 @@ public class AiCoachService {
       String userText,
       List<Map<String, String>> history,
       boolean hasPendingAction) {
-    AiContextSnapshot context = aiContextService.build(userId);
+    aiMemoryService.rememberIfUseful(userId, userText);
+    AiContextSnapshot context = aiContextService.build(userId, userText);
     String normalized = normalize(userText);
 
     if (!context.hasProfile()) {

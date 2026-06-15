@@ -27,6 +27,7 @@ class AiCoachServiceTest {
   @Mock FoodEstimationService foodEstimationService;
   @Mock PendingAiActionService pendingAiActionService;
   @Mock FoodLogService foodLogService;
+  @Mock AiMemoryService aiMemoryService;
   @Mock GroqClient groqClient;
 
   @InjectMocks AiCoachService aiCoachService;
@@ -37,7 +38,7 @@ class AiCoachServiceTest {
 
   @Test
   void answersRemainingUsingRealDailySummary() {
-    when(aiContextService.build(1L)).thenReturn(new AiContextSnapshot("ctx", true));
+    when(aiContextService.build(1L, "cuanto me falta hoy")).thenReturn(new AiContextSnapshot("ctx", true));
     when(foodLogService.todaySummary(1L))
         .thenReturn(
             new DailyNutritionSummary(
@@ -52,7 +53,7 @@ class AiCoachServiceTest {
 
   @Test
   void createsPendingActionForMealEstimate() {
-    when(aiContextService.build(1L)).thenReturn(new AiContextSnapshot("ctx", true));
+    when(aiContextService.build(1L, "he comido arroz con pollo")).thenReturn(new AiContextSnapshot("ctx", true));
     when(foodEstimationService.estimate(any(), any()))
         .thenReturn(new FoodEstimate("Arroz con pollo", MealType.lunch, 720.0, 42.0, 80.0, 18.0, ""));
 
@@ -73,7 +74,7 @@ class AiCoachServiceTest {
             .status(PendingAiActionStatus.pending)
             .expiresAt(Instant.now().plusSeconds(120))
             .build();
-    when(aiContextService.build(1L)).thenReturn(new AiContextSnapshot("ctx", true));
+    when(aiContextService.build(1L, "si, registralo")).thenReturn(new AiContextSnapshot("ctx", true));
     when(pendingAiActionService.findActivePending(1L, 7L)).thenReturn(action);
     when(pendingAiActionService.confirmFoodLog(action))
         .thenReturn(
@@ -93,7 +94,7 @@ class AiCoachServiceTest {
 
   @Test
   void fallsBackToGroqForRegularQuestions() {
-    when(aiContextService.build(1L)).thenReturn(new AiContextSnapshot("ctx", true));
+    when(aiContextService.build(1L, "dame una cena ligera")).thenReturn(new AiContextSnapshot("ctx", true));
     when(groqClient.complete(any())).thenReturn("Respuesta generica");
 
     String response = aiCoachService.answer(1L, conversation, "dame una cena ligera", List.of(), false);
