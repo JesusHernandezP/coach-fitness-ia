@@ -24,10 +24,10 @@ public class WeightLog {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @Column(nullable = false)
+  @Column(name = "weight_kg", nullable = false)
   private Double weightKg;
 
-  @Column(nullable = false)
+  @Column(name = "logged_at", nullable = false)
   private Instant loggedAt;
 
   @PrePersist

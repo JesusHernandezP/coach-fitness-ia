@@ -30,6 +30,7 @@ public class ActivityLog {
   private LocalDate date;
 
   private Integer steps;
+  @Column(name = "calories_burned")
   private Integer caloriesBurned;
   private String notes;
 }
