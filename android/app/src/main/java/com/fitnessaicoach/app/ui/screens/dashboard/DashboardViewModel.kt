@@ -2,6 +2,8 @@ package com.fitnessaicoach.app.ui.screens.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fitnessaicoach.app.data.network.DailyNutritionSummaryDto
+import com.fitnessaicoach.app.data.network.FoodLogDto
 import com.fitnessaicoach.app.data.network.TodaySnapshot
 import com.fitnessaicoach.app.data.network.WeightPoint
 import com.fitnessaicoach.app.data.network.WeeklySummary
@@ -19,6 +21,8 @@ data class DashboardContent(
     val weightProgress: List<WeightPoint>,
     val weeklySummary: WeeklySummary,
     val todaySnapshot: TodaySnapshot,
+    val dailyNutrition: DailyNutritionSummaryDto,
+    val todayFoodLogs: List<FoodLogDto>,
 )
 
 data class ActivityFormState(
@@ -28,6 +32,18 @@ data class ActivityFormState(
     val notes: String = "",
 ) {
     fun canSubmit(): Boolean = steps.toIntOrNull() != null || caloriesBurned.toIntOrNull() != null || notes.isNotBlank()
+}
+
+data class FoodFormState(
+    val date: String = "",
+    val mealType: String = "breakfast",
+    val description: String = "",
+    val calories: String = "",
+    val proteinG: String = "",
+    val carbsG: String = "",
+    val fatG: String = "",
+) {
+    fun canSubmit(): Boolean = description.isNotBlank() && calories.toDoubleOrNull() != null
 }
 
 @HiltViewModel
@@ -42,6 +58,7 @@ class DashboardViewModel @Inject constructor(
     ) : this(repo) {
         this.todayProvider = todayProvider
         _formState.value = ActivityFormState(date = todayProvider())
+        _foodFormState.value = FoodFormState(date = todayProvider())
     }
 
     private val _dashboardState = MutableStateFlow<UiState<DashboardContent>>(UiState.Loading)
@@ -50,8 +67,14 @@ class DashboardViewModel @Inject constructor(
     private val _formState = MutableStateFlow(ActivityFormState(date = todayProvider()))
     val formState: StateFlow<ActivityFormState> = _formState.asStateFlow()
 
+    private val _foodFormState = MutableStateFlow(FoodFormState(date = todayProvider()))
+    val foodFormState: StateFlow<FoodFormState> = _foodFormState.asStateFlow()
+
     private val _submitState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
     val submitState: StateFlow<UiState<Unit>> = _submitState.asStateFlow()
+
+    private val _foodSubmitState = MutableStateFlow<UiState<Unit>>(UiState.Idle)
+    val foodSubmitState: StateFlow<UiState<Unit>> = _foodSubmitState.asStateFlow()
 
     fun loadDashboard() {
         viewModelScope.launch {
@@ -61,6 +84,8 @@ class DashboardViewModel @Inject constructor(
                     weightProgress = repo.weightProgress().getOrThrow(),
                     weeklySummary = repo.weeklySummary().getOrThrow(),
                     todaySnapshot = repo.today().getOrThrow(),
+                    dailyNutrition = repo.todayNutrition().getOrThrow(),
+                    todayFoodLogs = repo.todayFoodLogs().getOrThrow(),
                 )
             }.fold(
                 onSuccess = { UiState.Success(it) },
@@ -104,8 +129,63 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun updateFoodMealType(value: String) {
+        _foodFormState.value = _foodFormState.value.copy(mealType = value)
+    }
+
+    fun updateFoodDescription(value: String) {
+        _foodFormState.value = _foodFormState.value.copy(description = value)
+    }
+
+    fun updateFoodCalories(value: String) {
+        _foodFormState.value = _foodFormState.value.copy(calories = value.filter { it.isDigit() || it == '.' })
+    }
+
+    fun updateFoodProtein(value: String) {
+        _foodFormState.value = _foodFormState.value.copy(proteinG = value.filter { it.isDigit() || it == '.' })
+    }
+
+    fun updateFoodCarbs(value: String) {
+        _foodFormState.value = _foodFormState.value.copy(carbsG = value.filter { it.isDigit() || it == '.' })
+    }
+
+    fun updateFoodFat(value: String) {
+        _foodFormState.value = _foodFormState.value.copy(fatG = value.filter { it.isDigit() || it == '.' })
+    }
+
+    fun submitFoodLog() {
+        if (!_foodFormState.value.canSubmit()) {
+            _foodSubmitState.value = UiState.Error("Describe la comida e introduce las calorias.")
+            return
+        }
+
+        viewModelScope.launch {
+            val form = _foodFormState.value
+            _foodSubmitState.value = UiState.Loading
+            repo.createFoodLog(
+                date = form.date,
+                mealType = form.mealType,
+                description = form.description.trim(),
+                calories = form.calories.toDouble(),
+                proteinG = form.proteinG.toDoubleOrNull(),
+                carbsG = form.carbsG.toDoubleOrNull(),
+                fatG = form.fatG.toDoubleOrNull(),
+            ).onSuccess {
+                _foodSubmitState.value = UiState.Success(Unit)
+                _foodFormState.value = FoodFormState(date = todayProvider())
+                loadDashboard()
+            }.onFailure {
+                _foodSubmitState.value = UiState.Error(it.message ?: "No se pudo guardar la comida")
+            }
+        }
+    }
+
     fun clearSubmitState() {
         _submitState.value = UiState.Idle
+    }
+
+    fun clearFoodSubmitState() {
+        _foodSubmitState.value = UiState.Idle
     }
 
     fun requireDashboardContent(): DashboardContent =

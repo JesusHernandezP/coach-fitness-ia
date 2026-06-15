@@ -72,6 +72,50 @@ data class TodaySnapshot(
     @Json(name = "targetCalories")      val targetCalories: Double?,
 )
 
+// ── Nutrition journal ─────────────────────────────────────────
+@JsonClass(generateAdapter = true)
+data class FoodLogRequest(
+    @Json(name = "date") val date: String,
+    @Json(name = "mealType") val mealType: String,
+    @Json(name = "description") val description: String,
+    @Json(name = "calories") val calories: Double,
+    @Json(name = "proteinG") val proteinG: Double? = null,
+    @Json(name = "carbsG") val carbsG: Double? = null,
+    @Json(name = "fatG") val fatG: Double? = null,
+    @Json(name = "source") val source: String = "manual",
+)
+
+@JsonClass(generateAdapter = true)
+data class FoodLogDto(
+    @Json(name = "id") val id: Long,
+    @Json(name = "date") val date: String,
+    @Json(name = "mealType") val mealType: String,
+    @Json(name = "description") val description: String,
+    @Json(name = "calories") val calories: Double,
+    @Json(name = "proteinG") val proteinG: Double? = null,
+    @Json(name = "carbsG") val carbsG: Double? = null,
+    @Json(name = "fatG") val fatG: Double? = null,
+)
+
+@JsonClass(generateAdapter = true)
+data class DailyNutritionSummaryDto(
+    @Json(name = "date") val date: String,
+    @Json(name = "targetCalories") val targetCalories: Double? = null,
+    @Json(name = "consumedCalories") val consumedCalories: Double,
+    @Json(name = "remainingCalories") val remainingCalories: Double? = null,
+    @Json(name = "targetProteinG") val targetProteinG: Double? = null,
+    @Json(name = "consumedProteinG") val consumedProteinG: Double,
+    @Json(name = "remainingProteinG") val remainingProteinG: Double? = null,
+    @Json(name = "targetCarbsG") val targetCarbsG: Double? = null,
+    @Json(name = "consumedCarbsG") val consumedCarbsG: Double,
+    @Json(name = "remainingCarbsG") val remainingCarbsG: Double? = null,
+    @Json(name = "targetFatG") val targetFatG: Double? = null,
+    @Json(name = "consumedFatG") val consumedFatG: Double,
+    @Json(name = "remainingFatG") val remainingFatG: Double? = null,
+    @Json(name = "activityCaloriesBurned") val activityCaloriesBurned: Int,
+    @Json(name = "netCalories") val netCalories: Double,
+)
+
 // ── Chat ───────────────────────────────────────────────────────
 @JsonClass(generateAdapter = true)
 data class Conversation(@Json(name = "id") val id: Long, @Json(name = "title") val title: String, @Json(name = "createdAt") val createdAt: String)
@@ -136,6 +180,15 @@ interface ApiService {
 
     @GET("dashboard/today")
     suspend fun dashboardToday(): TodaySnapshot
+
+    @GET("nutrition/today")
+    suspend fun nutritionToday(): DailyNutritionSummaryDto
+
+    @GET("food-logs/today")
+    suspend fun todayFoodLogs(): List<FoodLogDto>
+
+    @POST("food-logs")
+    suspend fun createFoodLog(@Body req: FoodLogRequest): FoodLogDto
 
     // Chat
     @GET("chat/conversations")

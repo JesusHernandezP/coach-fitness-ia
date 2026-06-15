@@ -10,6 +10,7 @@ import {
   TodaySnapshot,
   ActivityEntry,
 } from './dashboard.service';
+import { NutritionService, DailyNutritionSummary, FoodLog } from './nutrition.service';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -186,6 +187,122 @@ const today = () => new Date().toISOString().slice(0, 10);
           </div>
         </div>
       </div>
+
+      <div class="nutrition-grid">
+        <section class="card nutrition-summary-card" style="--delay:0.24s">
+          <div class="chart-header">
+            <div>
+              <h2 class="chart-title">Resumen Nutricional</h2>
+              <p class="chart-sub">Consumo de hoy frente a tus objetivos</p>
+            </div>
+          </div>
+
+          @if (dailyNutrition()) {
+            <div class="nutrition-hero">
+              <div>
+                <span class="stat-label">Consumidas</span>
+                <span class="nutrition-main">{{ dailyNutrition()!.consumedCalories | number:'1.0-0' }}</span>
+              </div>
+              <div class="nutrition-chip" [class.excess]="(dailyNutrition()!.remainingCalories ?? 0) < 0">
+                Restan {{ dailyNutrition()!.remainingCalories ?? 0 | number:'1.0-0' }} kcal
+              </div>
+            </div>
+
+            <div class="nutrition-macro-grid">
+              <div class="nutrition-macro-card">
+                <span class="macro-name">Proteína</span>
+                <strong>{{ dailyNutrition()!.consumedProteinG | number:'1.0-0' }}g</strong>
+                <span class="macro-hint">restan {{ dailyNutrition()!.remainingProteinG ?? 0 | number:'1.0-0' }}g</span>
+              </div>
+              <div class="nutrition-macro-card">
+                <span class="macro-name">Carbs</span>
+                <strong>{{ dailyNutrition()!.consumedCarbsG | number:'1.0-0' }}g</strong>
+                <span class="macro-hint">restan {{ dailyNutrition()!.remainingCarbsG ?? 0 | number:'1.0-0' }}g</span>
+              </div>
+              <div class="nutrition-macro-card">
+                <span class="macro-name">Grasa</span>
+                <strong>{{ dailyNutrition()!.consumedFatG | number:'1.0-0' }}g</strong>
+                <span class="macro-hint">restan {{ dailyNutrition()!.remainingFatG ?? 0 | number:'1.0-0' }}g</span>
+              </div>
+            </div>
+          } @else {
+            <div class="chart-empty chart-empty-sm">
+              <span class="empty-icon">🍽</span>
+              <p>Sin resumen nutricional aún.</p>
+            </div>
+          }
+        </section>
+
+        <section class="card nutrition-log-card" style="--delay:0.28s">
+          <div class="chart-header">
+            <div>
+              <h2 class="chart-title">Comidas de Hoy</h2>
+              <p class="chart-sub">Alta manual simple</p>
+            </div>
+          </div>
+
+          <div class="food-form">
+            <div class="field-row">
+              <div class="field">
+                <label class="label">Tipo</label>
+                <select class="input input-sm" [(ngModel)]="foodForm.mealType" name="mealType">
+                  @for (option of mealTypeOptions; track option.value) {
+                    <option [value]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label class="label">Kcal</label>
+                <input class="input input-sm" type="number" [(ngModel)]="foodForm.calories" name="foodCalories" min="0" placeholder="0" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Descripción</label>
+              <input class="input input-sm" type="text" [(ngModel)]="foodForm.description" name="foodDescription" placeholder="Ej. pechuga con arroz" />
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label class="label">Proteína</label>
+                <input class="input input-sm" type="number" [(ngModel)]="foodForm.proteinG" name="foodProtein" min="0" placeholder="0" />
+              </div>
+              <div class="field">
+                <label class="label">Carbs</label>
+                <input class="input input-sm" type="number" [(ngModel)]="foodForm.carbsG" name="foodCarbs" min="0" placeholder="0" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Grasa</label>
+              <input class="input input-sm" type="number" [(ngModel)]="foodForm.fatG" name="foodFat" min="0" placeholder="0" />
+            </div>
+
+            <button class="btn btn-primary btn-full" (click)="addFoodLog()" [disabled]="savingFood() || !foodForm.description.trim() || foodForm.calories === null">
+              @if (savingFood()) { <span class="spinner-sm"></span> Guardando... } @else { Guardar comida }
+            </button>
+          </div>
+
+          @if (todayFoodLogs().length > 0) {
+            <div class="food-list">
+              @for (food of todayFoodLogs(); track food.id) {
+                <div class="food-row">
+                  <div>
+                    <p class="food-title">{{ food.description }}</p>
+                    <p class="food-meta">{{ food.mealType }} · P {{ food.proteinG ?? 0 | number:'1.0-0' }} · C {{ food.carbsG ?? 0 | number:'1.0-0' }} · G {{ food.fatG ?? 0 | number:'1.0-0' }}</p>
+                  </div>
+                  <strong class="food-calories">{{ food.calories | number:'1.0-0' }} kcal</strong>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="chart-empty chart-empty-sm">
+              <span class="empty-icon">🥗</span>
+              <p>Aún no has registrado comidas hoy.</p>
+            </div>
+          }
+        </section>
+      </div>
     </div>
   `,
   styles: [`
@@ -361,6 +478,13 @@ const today = () => new Date().toISOString().slice(0, 10);
       gap: 1rem;
     }
 
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
     .chart-card {
       animation: slideUp 0.5s var(--delay, 0s) ease both;
     }
@@ -450,6 +574,62 @@ const today = () => new Date().toISOString().slice(0, 10);
 
     /* ── Activity form ── */
     .activity-form { display: flex; flex-direction: column; gap: 0.9rem; margin-top: 1rem; }
+    .food-form { display: flex; flex-direction: column; gap: 0.85rem; margin-bottom: 1rem; }
+    .nutrition-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .nutrition-main {
+      display: block;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.3rem;
+      line-height: 1;
+      color: var(--text);
+    }
+    .nutrition-chip {
+      border-radius: 999px;
+      padding: 0.4rem 0.8rem;
+      background: rgba(74,222,128,0.08);
+      border: 1px solid rgba(74,222,128,0.2);
+      color: #4ade80;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+    .nutrition-chip.excess {
+      background: rgba(224,82,82,0.08);
+      border-color: rgba(224,82,82,0.2);
+      color: #e05252;
+    }
+    .nutrition-macro-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+    }
+    .nutrition-macro-card {
+      background: #121212;
+      border: 1px solid #1f1f1f;
+      border-radius: 12px;
+      padding: 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .macro-hint { color: #666; font-size: 0.7rem; }
+    .food-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .food-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.85rem 0;
+      border-top: 1px solid #1e1e1e;
+    }
+    .food-title { color: #eee; font-size: 0.84rem; margin-bottom: 0.18rem; }
+    .food-meta { color: #666; font-size: 0.72rem; text-transform: capitalize; }
+    .food-calories { color: var(--accent); font-size: 0.82rem; white-space: nowrap; }
 
     .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
 
@@ -483,13 +663,16 @@ const today = () => new Date().toISOString().slice(0, 10);
 
     @media (max-width: 768px) {
       .main-grid { grid-template-columns: 1fr; }
+      .nutrition-grid { grid-template-columns: 1fr; }
       .weight-card, .steps-card, .activity-card { grid-column: 1; grid-row: auto; }
       .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .nutrition-macro-grid { grid-template-columns: 1fr; }
     }
   `],
 })
 export class DashboardComponent implements OnInit {
   private svc = inject(DashboardService);
+  private nutritionSvc = inject(NutritionService);
 
   now = new Date();
 
@@ -497,13 +680,32 @@ export class DashboardComponent implements OnInit {
   weeklyData        = signal<WeeklySummary | null>(null);
   weightPts         = signal<WeightPoint[]>([]);
   weeklyActivities  = signal<ActivityEntry[]>([]);
+  dailyNutrition    = signal<DailyNutritionSummary | null>(null);
+  todayFoodLogs     = signal<FoodLog[]>([]);
 
   addingWeight  = signal(false);
   savingActivity = signal(false);
   activitySaved  = signal(false);
+  savingFood     = signal(false);
 
   newWeight: number | null = null;
   actForm = { date: today(), steps: null as number | null, caloriesBurned: null as number | null, notes: '' };
+  foodForm = {
+    date: today(),
+    mealType: 'breakfast' as FoodLog['mealType'],
+    description: '',
+    calories: null as number | null,
+    proteinG: null as number | null,
+    carbsG: null as number | null,
+    fatG: null as number | null,
+  };
+  mealTypeOptions = [
+    { value: 'breakfast' as const, label: 'Desayuno' },
+    { value: 'lunch' as const, label: 'Comida' },
+    { value: 'dinner' as const, label: 'Cena' },
+    { value: 'snack' as const, label: 'Snack' },
+    { value: 'other' as const, label: 'Otro' },
+  ];
 
   today   = this.todayData;
   weekly  = this.weeklyData;
@@ -617,6 +819,7 @@ export class DashboardComponent implements OnInit {
       },
       error: () => {},
     });
+    this.reloadNutrition();
   }
 
   addWeight() {
@@ -649,8 +852,50 @@ export class DashboardComponent implements OnInit {
         this.svc.reloadToday().subscribe(t => this.todayData.set(t));
         this.svc.reloadWeeklySummary().subscribe(w => this.weeklyData.set(w));
         this.svc.reloadWeeklyActivities().subscribe(a => this.weeklyActivities.set(a));
+        this.reloadNutrition();
       },
       error: () => this.savingActivity.set(false),
+    });
+  }
+
+  addFoodLog() {
+    if (!this.foodForm.description.trim() || this.foodForm.calories === null) return;
+    this.savingFood.set(true);
+    this.nutritionSvc.createFoodLog({
+      date: this.foodForm.date,
+      mealType: this.foodForm.mealType,
+      description: this.foodForm.description.trim(),
+      calories: this.foodForm.calories,
+      proteinG: this.foodForm.proteinG ?? undefined,
+      carbsG: this.foodForm.carbsG ?? undefined,
+      fatG: this.foodForm.fatG ?? undefined,
+      source: 'manual',
+    }).subscribe({
+      next: () => {
+        this.foodForm = {
+          date: today(),
+          mealType: 'breakfast',
+          description: '',
+          calories: null,
+          proteinG: null,
+          carbsG: null,
+          fatG: null,
+        };
+        this.savingFood.set(false);
+        this.reloadNutrition();
+      },
+      error: () => this.savingFood.set(false),
+    });
+  }
+
+  private reloadNutrition() {
+    this.nutritionSvc.getTodaySummary().subscribe({
+      next: summary => this.dailyNutrition.set(summary),
+      error: () => this.dailyNutrition.set(null),
+    });
+    this.nutritionSvc.getTodayFoodLogs().subscribe({
+      next: foods => this.todayFoodLogs.set(foods),
+      error: () => this.todayFoodLogs.set([]),
     });
   }
 }

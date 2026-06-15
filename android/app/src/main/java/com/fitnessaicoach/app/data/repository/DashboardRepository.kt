@@ -16,6 +16,24 @@ class DashboardRepository @Inject constructor(private val api: ApiService) {
     suspend fun today(): Result<TodaySnapshot> =
         runCatching { api.dashboardToday() }
 
+    suspend fun todayNutrition(): Result<DailyNutritionSummaryDto> =
+        runCatching { api.nutritionToday() }
+
+    suspend fun todayFoodLogs(): Result<List<FoodLogDto>> =
+        runCatching { api.todayFoodLogs() }
+
+    suspend fun createFoodLog(
+        date: String,
+        mealType: String,
+        description: String,
+        calories: Double,
+        proteinG: Double? = null,
+        carbsG: Double? = null,
+        fatG: Double? = null,
+    ): Result<FoodLogDto> = runCatching {
+        api.createFoodLog(FoodLogRequest(date, mealType, description, calories, proteinG, carbsG, fatG))
+    }
+
     suspend fun addWeight(weightKg: Double, loggedAt: String? = null): Result<WeightLog> =
         runCatching { api.addWeight(WeightLogRequest(weightKg, loggedAt)) }
 
