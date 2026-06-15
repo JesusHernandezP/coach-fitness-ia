@@ -30,7 +30,7 @@ public class ChatMessage {
   @Column(nullable = false, columnDefinition = "TEXT")
   private String content;
 
-  @Column(nullable = false, updatable = false)
+  @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 
   @PrePersist

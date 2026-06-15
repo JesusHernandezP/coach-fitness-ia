@@ -25,8 +25,16 @@ public class NutritionTarget {
   private User user;
 
   private Double calories;
+
+  @Column(name = "protein_g")
   private Double proteinG;
+
+  @Column(name = "carbs_g")
   private Double carbsG;
+
+  @Column(name = "fat_g")
   private Double fatG;
+
+  @Column(name = "calculated_at")
   private Instant calculatedAt;
 }
