@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 
 export interface MetabolicProfile {
+  displayName?: string | null;
   age: number;
   sex: 'MALE' | 'FEMALE';
   heightCm: number;

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 
 public record ProfileRequest(
+    @Size(max = 80) @Schema(example = "Jesus") String displayName,
     @NotNull @Min(10) @Max(120) @Schema(example = "30") Integer age,
     @NotNull Sex sex,
     @NotNull @DecimalMin("100") @DecimalMax("250") @Schema(example = "170") Double heightCm,

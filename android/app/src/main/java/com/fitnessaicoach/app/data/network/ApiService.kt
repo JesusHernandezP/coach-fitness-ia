@@ -10,6 +10,7 @@ data class AuthResponse(@Json(name = "token") val token: String)
 
 // ── Profile ────────────────────────────────────────────────────
 data class MetabolicProfile(
+    @Json(name = "displayName")        val displayName: String? = null,
     @Json(name = "age")                val age: Int,
     @Json(name = "sex")                val sex: String,
     @Json(name = "heightCm")           val heightCm: Double,

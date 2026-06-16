@@ -10,6 +10,7 @@ import com.fitnessaicoach.app.data.network.TodaySnapshot
 import com.fitnessaicoach.app.data.network.WeightPoint
 import com.fitnessaicoach.app.data.network.WeeklySummary
 import com.fitnessaicoach.app.data.repository.DashboardRepository
+import com.fitnessaicoach.app.data.repository.ProfileRepository
 import com.fitnessaicoach.app.ui.common.UiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalDate
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class DashboardContent(
+    val displayName: String?,
     val weightProgress: List<WeightPoint>,
     val weeklySummary: WeeklySummary,
     val todaySnapshot: TodaySnapshot,
@@ -51,15 +53,17 @@ data class FoodFormState(
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
     private val repo: DashboardRepository,
+    private val profileRepo: ProfileRepository,
     private val healthConnectSyncManager: HealthConnectSyncManager,
 ) : ViewModel() {
     private var todayProvider: () -> String = { LocalDate.now().toString() }
 
     constructor(
         repo: DashboardRepository,
+        profileRepo: ProfileRepository,
         healthConnectSyncManager: HealthConnectSyncManager,
         todayProvider: () -> String,
-    ) : this(repo, healthConnectSyncManager) {
+    ) : this(repo, profileRepo, healthConnectSyncManager) {
         this.todayProvider = todayProvider
         _formState.value = ActivityFormState(date = todayProvider())
         _foodFormState.value = FoodFormState(date = todayProvider())
@@ -91,6 +95,7 @@ class DashboardViewModel @Inject constructor(
             _dashboardState.value = UiState.Loading
             _dashboardState.value = runCatching {
                 DashboardContent(
+                    displayName = profileRepo.getProfile().getOrThrow().displayName,
                     weightProgress = repo.weightProgress().getOrThrow(),
                     weeklySummary = repo.weeklySummary().getOrThrow(),
                     todaySnapshot = repo.today().getOrThrow(),

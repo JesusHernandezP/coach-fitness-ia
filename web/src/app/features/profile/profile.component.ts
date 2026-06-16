@@ -36,7 +36,7 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
       <header class="page-header">
         <div>
           <p class="page-eyebrow">Mi cuenta</p>
-          <h1 class="page-title">Perfil &amp; Objetivos</h1>
+          <h1 class="page-title">{{ form.displayName?.trim() ? form.displayName : 'Perfil & Objetivos' }}</h1>
         </div>
       </header>
 
@@ -63,6 +63,10 @@ const DIET_OPTS: { value: MetabolicProfile['dietType']; label: string }[] = [
                 <div class="skel skel-row skel-short"></div>
               </div>
             } @else {
+            <div class="field">
+              <label class="label">Cómo quieres que te llame la IA</label>
+              <input class="input" type="text" [(ngModel)]="form.displayName" name="displayName" maxlength="80" placeholder="Opcional" />
+            </div>
             <div class="form-row">
               <div class="field">
                 <label class="label">Edad</label>

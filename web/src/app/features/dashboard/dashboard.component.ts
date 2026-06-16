@@ -14,6 +14,7 @@ import {
   WeightPoint,
 } from './dashboard.service';
 import { DailyNutritionSummary, FoodLog, NutritionService } from './nutrition.service';
+import { ProfileService } from '../profile/profile.service';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -26,7 +27,7 @@ const today = () => new Date().toISOString().slice(0, 10);
       <header class="page-header">
         <div>
           <p class="eyebrow">Panel integral</p>
-          <h1>Hoy, semana y evolución</h1>
+          <h1>{{ displayName() ? 'Hola, ' + displayName() : 'Hoy, semana y evolución' }}</h1>
         </div>
         <span class="header-date">{{ now | date:'EEEE, d MMMM yyyy' }}</span>
       </header>
@@ -382,8 +383,10 @@ const today = () => new Date().toISOString().slice(0, 10);
 export class DashboardComponent implements OnInit {
   private svc = inject(DashboardService);
   private nutritionSvc = inject(NutritionService);
+  private profileSvc = inject(ProfileService);
 
   now = new Date();
+  displayName = signal<string | null>(null);
 
   todayData = signal<TodaySnapshot | null>(null);
   weeklyKpisData = signal<WeeklyKpis | null>(null);
@@ -440,6 +443,10 @@ export class DashboardComponent implements OnInit {
   };
 
   ngOnInit() {
+    this.profileSvc.getProfile().subscribe({
+      next: profile => this.displayName.set(profile.displayName?.trim() || null),
+      error: () => this.displayName.set(null),
+    });
     this.reloadDashboard();
     this.reloadNutrition();
   }

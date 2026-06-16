@@ -135,7 +135,7 @@ fun ProfileScreen(
                     .padding(horizontal = 24.dp, vertical = 28.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                ProfileHeader(effectiveOnboarding)
+                ProfileHeader(effectiveOnboarding, formState.displayName)
 
                 SurfaceCard {
                     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -145,6 +145,17 @@ fun ProfileScreen(
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 1.8.sp,
+                        )
+
+                        OutlinedTextField(
+                            value = formState.displayName,
+                            onValueChange = viewModel::updateDisplayName,
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = profileFieldColors(),
+                            label = { Text("Como quieres que te llame la IA") },
+                            placeholder = { Text("Opcional", color = TextMuted) },
                         )
 
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -240,7 +251,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileHeader(isOnboarding: Boolean) {
+private fun ProfileHeader(isOnboarding: Boolean, displayName: String) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
             text = if (isOnboarding) "COMPLETA TU" else "AJUSTA TU",
@@ -251,7 +262,7 @@ private fun ProfileHeader(isOnboarding: Boolean) {
             lineHeight = 34.sp,
         )
         Text(
-            text = "PERFIL",
+            text = displayName.trim().ifBlank { "PERFIL" },
             color = TextPrimary,
             fontSize = 34.sp,
             fontWeight = FontWeight.Black,
