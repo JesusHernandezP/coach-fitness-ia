@@ -43,6 +43,7 @@ class ProfileViewModelTest {
     @Test
     fun `loadProfile fills form and targets when profile exists`() = runTest {
         val profile = MetabolicProfile(
+            displayName = "Alex",
             age = 30,
             sex = "MALE",
             heightCm = 180.0,
@@ -62,6 +63,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         assertEquals(30, viewModel.formState.value.age)
+        assertEquals("Alex", viewModel.formState.value.displayName)
         assertEquals("MALE", viewModel.formState.value.sex)
         assertEquals("MODERATE", viewModel.formState.value.activityLevel)
         assertFalse(viewModel.isOnboarding.value)
@@ -84,6 +86,7 @@ class ProfileViewModelTest {
     @Test
     fun `saveProfile persists form and refreshes targets on success`() = runTest {
         val savedProfile = MetabolicProfile(
+            displayName = "Maria",
             age = 28,
             sex = "FEMALE",
             heightCm = 165.0,
@@ -105,6 +108,7 @@ class ProfileViewModelTest {
         advanceUntilIdle()
 
         viewModel.updateAge("28")
+        viewModel.updateDisplayName("Maria")
         viewModel.updateSex("FEMALE")
         viewModel.updateHeightCm("165")
         viewModel.updateCurrentWeightKg("61")

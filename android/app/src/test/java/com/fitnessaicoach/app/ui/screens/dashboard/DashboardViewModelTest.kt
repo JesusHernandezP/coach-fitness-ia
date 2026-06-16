@@ -8,10 +8,13 @@ import com.fitnessaicoach.app.data.network.WeightPoint
 import com.fitnessaicoach.app.data.network.WeeklySummary
 import com.fitnessaicoach.app.data.network.DailyNutritionSummaryDto
 import com.fitnessaicoach.app.data.network.ActivityLogRequest
+import com.fitnessaicoach.app.data.network.MetabolicProfile
 import com.fitnessaicoach.app.data.repository.DashboardRepository
+import com.fitnessaicoach.app.data.repository.ProfileRepository
 import com.fitnessaicoach.app.ui.MainDispatcherRule
 import com.fitnessaicoach.app.ui.common.UiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -30,13 +33,34 @@ class DashboardViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var repo: DashboardRepository
+    private lateinit var profileRepo: ProfileRepository
     private lateinit var healthConnectSyncManager: HealthConnectSyncManager
 
     @Before
     fun setup() {
         repo = mock()
+        profileRepo = mock()
         healthConnectSyncManager = mock()
         whenever(healthConnectSyncManager.availability()).thenReturn(HealthConnectAvailability.Available)
+        runBlocking {
+            whenever(profileRepo.getProfile()).thenReturn(
+                Result.success(
+                    MetabolicProfile(
+                        displayName = "Alex",
+                        age = 30,
+                        sex = "MALE",
+                        heightCm = 180.0,
+                        currentWeightKg = 80.0,
+                        activityLevel = "MODERATELY_ACTIVE",
+                        goal = "MAINTAIN",
+                        dietType = "STANDARD",
+                        weeklyExerciseDays = 4,
+                        exerciseMinutes = 45,
+                        dailySteps = 9000,
+                    ),
+                ),
+            )
+        }
     }
 
     @Test
@@ -87,13 +111,14 @@ class DashboardViewModelTest {
         whenever(repo.todayNutrition()).thenReturn(Result.success(nutrition))
         whenever(repo.todayFoodLogs()).thenReturn(Result.success(emptyList()))
 
-        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
+        val viewModel = DashboardViewModel(repo, profileRepo, healthConnectSyncManager) { "2026-04-18" }
         viewModel.loadDashboard()
         advanceUntilIdle()
 
         assertEquals(
             UiState.Success(
                 DashboardContent(
+                    displayName = "Alex",
                     weightProgress = points,
                     weeklySummary = weeklySummary,
                     todaySnapshot = todaySnapshot,
@@ -182,7 +207,7 @@ class DashboardViewModelTest {
             ),
         ).thenReturn(Result.success(Unit))
 
-        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
+        val viewModel = DashboardViewModel(repo, profileRepo, healthConnectSyncManager) { "2026-04-18" }
         viewModel.loadDashboard()
         advanceUntilIdle()
 
@@ -248,7 +273,7 @@ class DashboardViewModelTest {
         )
         whenever(repo.todayFoodLogs()).thenReturn(Result.success(emptyList()))
 
-        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
+        val viewModel = DashboardViewModel(repo, profileRepo, healthConnectSyncManager) { "2026-04-18" }
         viewModel.loadDashboard()
         advanceUntilIdle()
 
@@ -310,7 +335,7 @@ class DashboardViewModelTest {
         )
         whenever(repo.todayFoodLogs()).thenReturn(Result.success(emptyList()))
 
-        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
+        val viewModel = DashboardViewModel(repo, profileRepo, healthConnectSyncManager) { "2026-04-18" }
         viewModel.syncTodayFromHealthConnect()
         advanceUntilIdle()
 

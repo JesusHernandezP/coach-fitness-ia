@@ -29,6 +29,9 @@ public class User implements UserDetails {
   @Column(nullable = false)
   private String password;
 
+  @Column(name = "display_name", length = 80)
+  private String displayName;
+
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
 

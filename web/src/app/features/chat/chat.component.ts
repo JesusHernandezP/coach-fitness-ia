@@ -5,6 +5,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { ChatService, Conversation, ChatMessage } from './chat.service';
+import { ProfileService } from '../profile/profile.service';
 
 @Component({
   selector: 'app-chat',
@@ -89,6 +90,9 @@ import { ChatService, Conversation, ChatMessage } from './chat.service';
                     <span class="status-online">● En línea</span>
                   }
                 </p>
+                @if (displayName()) {
+                  <p class="chat-header-user">Acompañando a {{ displayName() }}</p>
+                }
               </div>
             </div>
             <span class="conv-badge">{{ activeConv()?.title }}</span>
@@ -328,6 +332,7 @@ import { ChatService, Conversation, ChatMessage } from './chat.service';
 
     .chat-header-name { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 0.1em; color: var(--accent); }
     .chat-header-status { font-size: 0.68rem; margin-top: 0.1rem; }
+    .chat-header-user { font-size: 0.68rem; margin-top: 0.15rem; color: #8a8a8a; }
     .status-online { color: #4ade80; }
     .status-thinking { color: #d4b200; }
 
@@ -476,6 +481,7 @@ import { ChatService, Conversation, ChatMessage } from './chat.service';
 })
 export class ChatComponent implements OnInit, AfterViewChecked {
   private svc = inject(ChatService);
+  private profileSvc = inject(ProfileService);
 
   @ViewChild('messagesWrap') messagesWrap!: ElementRef<HTMLDivElement>;
 
@@ -486,11 +492,16 @@ export class ChatComponent implements OnInit, AfterViewChecked {
   loadingMsgs    = signal(false);
   sending        = signal(false);
   sendError      = signal('');
+  displayName    = signal<string | null>(null);
 
   inputText = '';
   private shouldScroll = false;
 
   ngOnInit() {
+    this.profileSvc.getProfile().subscribe({
+      next: profile => this.displayName.set(profile.displayName?.trim() || null),
+      error: () => this.displayName.set(null),
+    });
     this.svc.getConversations().subscribe({
       next: convs => { this.conversations.set(convs); this.loadingConvs.set(false); },
       error: () => this.loadingConvs.set(false),

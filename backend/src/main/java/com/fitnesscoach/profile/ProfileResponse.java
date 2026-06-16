@@ -3,6 +3,7 @@ package com.fitnesscoach.profile;
 import java.time.Instant;
 
 public record ProfileResponse(
+    String displayName,
     Integer age,
     Sex sex,
     Double heightCm,
@@ -16,8 +17,9 @@ public record ProfileResponse(
     Goal goal,
     Instant updatedAt) {
 
-  static ProfileResponse from(MetabolicProfile p) {
+  static ProfileResponse from(MetabolicProfile p, String displayName) {
     return new ProfileResponse(
+        displayName,
         p.getAge(),
         p.getSex(),
         p.getHeightCm(),

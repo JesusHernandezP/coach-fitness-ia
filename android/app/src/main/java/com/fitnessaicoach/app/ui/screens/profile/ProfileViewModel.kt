@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class ProfileFormState(
+    val displayName: String = "",
     val age: Int = 0,
     val sex: String = "MALE",
     val heightCm: Double = 0.0,
@@ -27,6 +28,7 @@ data class ProfileFormState(
     val dailySteps: Int = 0,
 ) {
     fun toMetabolicProfile() = MetabolicProfile(
+        displayName = displayName.trim().ifBlank { null },
         age = age,
         sex = sex,
         heightCm = heightCm,
@@ -41,6 +43,7 @@ data class ProfileFormState(
 
     companion object {
         fun fromProfile(profile: MetabolicProfile) = ProfileFormState(
+            displayName = profile.displayName.orEmpty(),
             age = profile.age,
             sex = profile.sex,
             heightCm = profile.heightCm,
@@ -112,6 +115,10 @@ class ProfileViewModel @Inject constructor(
 
     fun updateAge(value: String) {
         _formState.value = _formState.value.copy(age = value.toIntOrNull() ?: 0)
+    }
+
+    fun updateDisplayName(value: String) {
+        _formState.value = _formState.value.copy(displayName = value.take(80))
     }
 
     fun updateSex(value: String) {

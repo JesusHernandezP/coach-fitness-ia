@@ -6,6 +6,7 @@ import com.fitnesscoach.nutrition.FoodLogRepository;
 import com.fitnesscoach.nutrition.FoodLogService;
 import com.fitnesscoach.profile.MetabolicProfileRepository;
 import com.fitnesscoach.profile.NutritionTargetRepository;
+import com.fitnesscoach.user.UserRepository;
 import com.fitnesscoach.weight.WeightLogRepository;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class AiContextService {
   private final ActivityLogRepository activityLogRepository;
   private final WeightLogRepository weightLogRepository;
   private final RagService ragService;
+  private final UserRepository userRepository;
 
   public AiContextSnapshot build(Long userId, String userText) {
     StringBuilder prompt = new StringBuilder();
@@ -33,6 +35,10 @@ public class AiContextService {
     }
 
     var profile = profileOpt.get();
+    String displayName = userRepository.getReferenceById(userId).getDisplayName();
+    if (displayName != null) {
+      prompt.append("Nombre preferido del usuario: ").append(displayName).append(". ");
+    }
     prompt
         .append("Perfil: ")
         .append(profile.getSex())

@@ -18,7 +18,8 @@ public class ProfileService {
   private final UserRepository userRepo;
 
   public ProfileResponse getProfile(Long userId) {
-    return ProfileResponse.from(findOrThrow(userId));
+    MetabolicProfile profile = findOrThrow(userId);
+    return ProfileResponse.from(profile, userRepo.getReferenceById(userId).getDisplayName());
   }
 
   @Transactional
@@ -27,6 +28,7 @@ public class ProfileService {
     MetabolicProfile profile =
         profileRepo.findByUserId(userId).orElse(MetabolicProfile.builder().user(user).build());
 
+    user.setDisplayName(normalizeDisplayName(req.displayName()));
     profile.setAge(req.age());
     profile.setSex(req.sex());
     profile.setHeightCm(req.heightCm());
@@ -41,7 +43,7 @@ public class ProfileService {
 
     profileRepo.save(profile);
     recalculateTargets(user, profile);
-    return ProfileResponse.from(profile);
+    return ProfileResponse.from(profile, user.getDisplayName());
   }
 
   public NutritionTargetResponse getTargets(Long userId) {
@@ -67,5 +69,13 @@ public class ProfileService {
     return profileRepo
         .findByUserId(userId)
         .orElseThrow(() -> new EntityNotFoundException("Perfil no encontrado"));
+  }
+
+  private String normalizeDisplayName(String displayName) {
+    if (displayName == null) {
+      return null;
+    }
+    String trimmed = displayName.trim();
+    return trimmed.isEmpty() ? null : trimmed;
   }
 }

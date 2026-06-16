@@ -199,7 +199,7 @@ private fun DashboardContentView(
             .padding(horizontal = 20.dp, vertical = 24.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
-        DashboardHeader()
+        DashboardHeader(content.displayName)
         DashboardQuickActions(
             onLogWeight = { navController.navigate(Screen.LogWeight.route) },
             onLogActivity = { navController.navigate(Screen.LogActivity.route) },
@@ -260,7 +260,7 @@ private fun HealthConnectCard(
 }
 
 @Composable
-private fun DashboardHeader() {
+private fun DashboardHeader(displayName: String?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -268,14 +268,18 @@ private fun DashboardHeader() {
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
-                text = "PANEL",
+                text = displayName?.takeIf { it.isNotBlank() } ?: "PANEL",
                 color = Gold,
                 fontSize = 34.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 4.sp,
             )
             Text(
-                text = "Tu progreso diario de un vistazo.",
+                text = if (displayName.isNullOrBlank()) {
+                    "Tu progreso diario de un vistazo."
+                } else {
+                    "Tu progreso diario, $displayName."
+                },
                 color = TextMuted,
                 fontSize = 14.sp,
             )
