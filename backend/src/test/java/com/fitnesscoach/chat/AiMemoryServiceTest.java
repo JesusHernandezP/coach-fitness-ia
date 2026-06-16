@@ -1,6 +1,5 @@
 package com.fitnesscoach.chat;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -31,13 +30,19 @@ class AiMemoryServiceTest {
     aiMemoryService.rememberIfUseful(1L, "Soy alergico a los frutos secos");
 
     verify(aiMemoryRepository)
-        .save(eq(1L), eq(AiMemoryType.restriction), eq("Soy alergico a los frutos secos"), eq("[1.0,0.0]"), anyInt());
+        .save(
+            eq(1L),
+            eq(AiMemoryType.restriction),
+            eq("Soy alergico a los frutos secos"),
+            eq("[1.0,0.0]"),
+            anyInt());
   }
 
   @Test
   void ignoresMessagesWithoutUsefulMemorySignal() {
     aiMemoryService.rememberIfUseful(1L, "hola, que tal");
 
-    verify(aiMemoryRepository, never()).save(eq(1L), eq(AiMemoryType.preference), eq("hola, que tal"), eq(""), anyInt());
+    verify(aiMemoryRepository, never())
+        .save(eq(1L), eq(AiMemoryType.preference), eq("hola, que tal"), eq(""), anyInt());
   }
 }

@@ -66,10 +66,17 @@ class WeeklyReviewServiceTest {
   void generatesReviewFromAiJsonWhenDataExists() {
     when(profileRepository.findByUserId(1L)).thenReturn(Optional.of(profile()));
     when(targetRepository.findByUserId(1L)).thenReturn(Optional.of(target()));
-    when(foodLogRepository.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(any(), any(), any()))
+    when(foodLogRepository.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(
+            any(), any(), any()))
         .thenReturn(List.of(foodLog(LocalDate.now(), 620, 42)));
     when(activityLogRepository.findByUserIdAndDateBetweenOrderByDateAsc(any(), any(), any()))
-        .thenReturn(List.of(ActivityLog.builder().date(LocalDate.now()).steps(9000).caloriesBurned(380).build()));
+        .thenReturn(
+            List.of(
+                ActivityLog.builder()
+                    .date(LocalDate.now())
+                    .steps(9000)
+                    .caloriesBurned(380)
+                    .build()));
     when(weightLogRepository.findByUserIdAndLoggedAtBetweenOrderByLoggedAtAsc(any(), any(), any()))
         .thenReturn(List.of(weightLog(81.2)));
     when(dashboardService.weeklyKpis(1L))
@@ -90,7 +97,8 @@ class WeeklyReviewServiceTest {
     WeeklyReviewResponse response = weeklyReviewService.generate(1L);
 
     assertThat(response.summary()).contains("5 de 7");
-    assertThat(response.nutritionFindings()).containsExactly("Proteina media ligeramente por debajo del objetivo.");
+    assertThat(response.nutritionFindings())
+        .containsExactly("Proteina media ligeramente por debajo del objetivo.");
     assertThat(response.recommendations()).contains("Sube proteina en desayuno.");
   }
 
@@ -98,7 +106,8 @@ class WeeklyReviewServiceTest {
   void fallsBackGracefullyWhenAiReturnsInvalidJsonAndDataIsSparse() {
     when(profileRepository.findByUserId(1L)).thenReturn(Optional.empty());
     when(targetRepository.findByUserId(1L)).thenReturn(Optional.empty());
-    when(foodLogRepository.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(any(), any(), any()))
+    when(foodLogRepository.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(
+            any(), any(), any()))
         .thenReturn(List.of());
     when(activityLogRepository.findByUserIdAndDateBetweenOrderByDateAsc(any(), any(), any()))
         .thenReturn(List.of());
@@ -111,7 +120,8 @@ class WeeklyReviewServiceTest {
     WeeklyReviewResponse response = weeklyReviewService.generate(1L);
 
     assertThat(response.summary()).contains("Hay pocos datos");
-    assertThat(response.activityFindings()).containsExactly("No hay actividad registrada esta semana.");
+    assertThat(response.activityFindings())
+        .containsExactly("No hay actividad registrada esta semana.");
     assertThat(response.weightFindings())
         .containsExactly("No hay suficientes pesos para calcular el cambio semanal.");
   }
@@ -129,7 +139,12 @@ class WeeklyReviewServiceTest {
   }
 
   private NutritionTarget target() {
-    return NutritionTarget.builder().calories(2360.0).proteinG(160.0).carbsG(286.0).fatG(64.0).build();
+    return NutritionTarget.builder()
+        .calories(2360.0)
+        .proteinG(160.0)
+        .carbsG(286.0)
+        .fatG(64.0)
+        .build();
   }
 
   private FoodLog foodLog(LocalDate date, double calories, double proteinG) {

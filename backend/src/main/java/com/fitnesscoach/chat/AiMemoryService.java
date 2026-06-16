@@ -14,7 +14,8 @@ public class AiMemoryService {
 
   public void rememberIfUseful(Long userId, String userText) {
     MemoryCandidate candidate = detectCandidate(userText);
-    if (candidate == null || aiMemoryRepository.exists(userId, candidate.type(), candidate.content())) {
+    if (candidate == null
+        || aiMemoryRepository.exists(userId, candidate.type(), candidate.content())) {
       return;
     }
 

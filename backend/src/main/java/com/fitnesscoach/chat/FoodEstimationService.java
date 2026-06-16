@@ -29,7 +29,11 @@ public class FoodEstimationService {
     String raw =
         groqClient.complete(
             List.of(
-                Map.of("role", "system", "content", "Eres un estimador nutricional. Respondes solo JSON."),
+                Map.of(
+                    "role",
+                    "system",
+                    "content",
+                    "Eres un estimador nutricional. Respondes solo JSON."),
                 Map.of("role", "user", "content", prompt)));
     try {
       return objectMapper.readValue(cleanJson(raw), FoodEstimate.class);

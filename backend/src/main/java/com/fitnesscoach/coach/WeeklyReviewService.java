@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fitnesscoach.activity.ActivityLog;
 import com.fitnesscoach.activity.ActivityLogRepository;
 import com.fitnesscoach.chat.GroqClient;
-import com.fitnesscoach.dashboard.WeeklyKpisSnapshot;
 import com.fitnesscoach.dashboard.DashboardService;
+import com.fitnesscoach.dashboard.WeeklyKpisSnapshot;
 import com.fitnesscoach.nutrition.FoodLog;
 import com.fitnesscoach.nutrition.FoodLogRepository;
 import com.fitnesscoach.profile.MetabolicProfile;
@@ -52,7 +52,8 @@ public class WeeklyReviewService {
         foodLogRepository.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(
             userId, periodStart, periodEnd);
     List<ActivityLog> activities =
-        activityLogRepository.findByUserIdAndDateBetweenOrderByDateAsc(userId, periodStart, periodEnd);
+        activityLogRepository.findByUserIdAndDateBetweenOrderByDateAsc(
+            userId, periodStart, periodEnd);
     List<WeightLog> weights =
         weightLogRepository.findByUserIdAndLoggedAtBetweenOrderByLoggedAtAsc(
             userId,
@@ -60,7 +61,9 @@ public class WeeklyReviewService {
             periodEnd.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC));
     WeeklyKpisSnapshot weeklyKpis = dashboardService.weeklyKpis(userId);
 
-    String prompt = buildPrompt(periodStart, periodEnd, profile, target, foods, activities, weights, weeklyKpis);
+    String prompt =
+        buildPrompt(
+            periodStart, periodEnd, profile, target, foods, activities, weights, weeklyKpis);
 
     try {
       String raw =
@@ -86,14 +89,16 @@ public class WeeklyReviewService {
       List<WeightLog> weights,
       WeeklyKpisSnapshot weeklyKpis) {
     StringBuilder prompt = new StringBuilder();
-    prompt.append("Revision semanal del ")
+    prompt
+        .append("Revision semanal del ")
         .append(periodStart)
         .append(" al ")
         .append(periodEnd)
         .append(". ");
 
     if (profile != null) {
-      prompt.append("Perfil: objetivo ")
+      prompt
+          .append("Perfil: objetivo ")
           .append(profile.getGoal())
           .append(", dieta ")
           .append(profile.getDietType())
@@ -221,14 +226,17 @@ public class WeeklyReviewService {
                 : String.format(
                     Locale.US,
                     "Media diaria de %.0f pasos y %d kcal activas totales.",
-                    weeklyKpis.avgSteps(), weeklyKpis.activeCaloriesTotal()));
+                    weeklyKpis.avgSteps(),
+                    weeklyKpis.activeCaloriesTotal()));
 
     List<String> weightFindings =
         List.of(
             weeklyKpis.weightDelta() == null
                 ? "No hay suficientes pesos para calcular el cambio semanal."
                 : String.format(
-                    Locale.US, "El peso vario %.1f kg durante la semana.", weeklyKpis.weightDelta()));
+                    Locale.US,
+                    "El peso vario %.1f kg durante la semana.",
+                    weeklyKpis.weightDelta()));
 
     List<String> recommendations =
         List.of(

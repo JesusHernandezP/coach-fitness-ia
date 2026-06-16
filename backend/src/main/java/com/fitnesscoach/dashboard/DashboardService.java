@@ -189,7 +189,11 @@ public class DashboardService {
       double consumedCalories = sum(logsByDate.getOrDefault(date, List.of()), FoodLog::getCalories);
       Double targetCalories = target != null ? target.getCalories() : null;
       response.add(
-          new AdherencePoint(date, consumedCalories, targetCalories, adherencePct(consumedCalories, targetCalories)));
+          new AdherencePoint(
+              date,
+              consumedCalories,
+              targetCalories,
+              adherencePct(consumedCalories, targetCalories)));
     }
 
     return response;
@@ -212,7 +216,11 @@ public class DashboardService {
   }
 
   private double sum(List<FoodLog> logs, java.util.function.Function<FoodLog, Double> extractor) {
-    return logs.stream().map(extractor).filter(v -> v != null).mapToDouble(Double::doubleValue).sum();
+    return logs.stream()
+        .map(extractor)
+        .filter(v -> v != null)
+        .mapToDouble(Double::doubleValue)
+        .sum();
   }
 
   private Double remaining(Double target, double consumed) {
@@ -221,7 +229,8 @@ public class DashboardService {
 
   private Map<LocalDate, List<FoodLog>> foodLogsByDate(Long userId, LocalDate from, LocalDate to) {
     Map<LocalDate, List<FoodLog>> grouped = new HashMap<>();
-    for (FoodLog log : foodLogRepo.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(userId, from, to)) {
+    for (FoodLog log :
+        foodLogRepo.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(userId, from, to)) {
       grouped.computeIfAbsent(log.getDate(), ignored -> new ArrayList<>()).add(log);
     }
     return grouped;
@@ -229,7 +238,8 @@ public class DashboardService {
 
   private Map<LocalDate, ActivityLog> activitiesByDate(Long userId, LocalDate from, LocalDate to) {
     Map<LocalDate, ActivityLog> grouped = new HashMap<>();
-    for (ActivityLog log : activityRepo.findByUserIdAndDateBetweenOrderByDateAsc(userId, from, to)) {
+    for (ActivityLog log :
+        activityRepo.findByUserIdAndDateBetweenOrderByDateAsc(userId, from, to)) {
       grouped.put(log.getDate(), log);
     }
     return grouped;
@@ -250,10 +260,11 @@ public class DashboardService {
   }
 
   private int computeLoggingStreak(Long userId, LocalDate today) {
-    Map<LocalDate, List<FoodLog>> foodLogs =
-        foodLogsByDate(userId, today.minusDays(29), today);
+    Map<LocalDate, List<FoodLog>> foodLogs = foodLogsByDate(userId, today.minusDays(29), today);
     int streak = 0;
-    for (LocalDate date = today; foodLogs.containsKey(date) && !foodLogs.get(date).isEmpty(); date = date.minusDays(1)) {
+    for (LocalDate date = today;
+        foodLogs.containsKey(date) && !foodLogs.get(date).isEmpty();
+        date = date.minusDays(1)) {
       streak++;
     }
     return streak;
