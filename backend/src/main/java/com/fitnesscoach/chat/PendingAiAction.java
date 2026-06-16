@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "pending_ai_actions")
@@ -31,7 +33,8 @@ public class PendingAiAction {
   @Column(name = "action_type", nullable = false, length = 80)
   private String actionType;
 
-  @Column(nullable = false, columnDefinition = "TEXT")
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(nullable = false, columnDefinition = "jsonb")
   private String payload;
 
   @Enumerated(EnumType.STRING)
