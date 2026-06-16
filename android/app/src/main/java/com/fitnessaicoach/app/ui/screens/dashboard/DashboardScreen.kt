@@ -1,8 +1,10 @@
 package com.fitnessaicoach.app.ui.screens.dashboard
 
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,14 +22,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.filled.MonitorWeight
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.health.connect.client.PermissionController
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.StepsRecord
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -46,7 +56,10 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.fitnessaicoach.app.data.health.HealthConnectAvailability
 import com.fitnessaicoach.app.navigation.Screen
+import com.fitnessaicoach.app.data.network.DailyNutritionSummaryDto
+import com.fitnessaicoach.app.data.network.FoodLogDto
 import com.fitnessaicoach.app.data.network.TodaySnapshot
 import com.fitnessaicoach.app.data.network.WeightPoint
 import com.fitnessaicoach.app.data.network.WeeklySummary
@@ -62,6 +75,7 @@ import com.fitnessaicoach.app.ui.theme.Surface
 import com.fitnessaicoach.app.ui.theme.Surface2
 import com.fitnessaicoach.app.ui.theme.TextMuted
 import com.fitnessaicoach.app.ui.theme.TextPrimary
+import kotlinx.coroutines.launch
 
 @Composable
 fun DashboardScreen(
@@ -69,9 +83,24 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val dashboardState by viewModel.dashboardState.collectAsStateWithLifecycle()
+    val foodFormState by viewModel.foodFormState.collectAsStateWithLifecycle()
+    val foodSubmitState by viewModel.foodSubmitState.collectAsStateWithLifecycle()
+    val healthSyncState by viewModel.healthSyncState.collectAsStateWithLifecycle()
+    val healthAvailability by viewModel.healthAvailability.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    val permissionsLauncher = rememberLauncherForActivityResult(
+        PermissionController.createRequestPermissionResultContract(),
+    ) {
+        scope.launch {
+            if (viewModel.hasHealthPermissions()) {
+                viewModel.syncTodayFromHealthConnect()
+            }
+        }
+    }
     LaunchedEffect(lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            viewModel.refreshHealthAvailability()
             viewModel.loadDashboard()
         }
     }
@@ -118,6 +147,26 @@ fun DashboardScreen(
                 DashboardContentView(
                     navController = navController,
                     content = state.data,
+                    foodFormState = foodFormState,
+                    foodSubmitState = foodSubmitState,
+                    healthSyncState = healthSyncState,
+                    healthAvailability = healthAvailability,
+                    onFoodMealTypeChange = viewModel::updateFoodMealType,
+                    onFoodDescriptionChange = viewModel::updateFoodDescription,
+                    onFoodCaloriesChange = viewModel::updateFoodCalories,
+                    onFoodProteinChange = viewModel::updateFoodProtein,
+                    onFoodCarbsChange = viewModel::updateFoodCarbs,
+                    onFoodFatChange = viewModel::updateFoodFat,
+                    onFoodSubmit = viewModel::submitFoodLog,
+                    onHealthSync = {
+                        scope.launch {
+                            if (viewModel.hasHealthPermissions()) {
+                                viewModel.syncTodayFromHealthConnect()
+                            } else {
+                                permissionsLauncher.launch(healthPermissions())
+                            }
+                        }
+                    },
                 )
             }
 
@@ -130,6 +179,18 @@ fun DashboardScreen(
 private fun DashboardContentView(
     navController: NavController,
     content: DashboardContent,
+    foodFormState: FoodFormState,
+    foodSubmitState: UiState<Unit>,
+    healthSyncState: UiState<String>,
+    healthAvailability: HealthConnectAvailability,
+    onFoodMealTypeChange: (String) -> Unit,
+    onFoodDescriptionChange: (String) -> Unit,
+    onFoodCaloriesChange: (String) -> Unit,
+    onFoodProteinChange: (String) -> Unit,
+    onFoodCarbsChange: (String) -> Unit,
+    onFoodFatChange: (String) -> Unit,
+    onFoodSubmit: () -> Unit,
+    onHealthSync: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -143,10 +204,58 @@ private fun DashboardContentView(
             onLogWeight = { navController.navigate(Screen.LogWeight.route) },
             onLogActivity = { navController.navigate(Screen.LogActivity.route) },
         )
+        HealthConnectCard(healthAvailability, healthSyncState, onHealthSync)
         WeightProgressCard(content.weightProgress)
         WeeklySummaryCard(content.weeklySummary)
         TodaySummarySection(content.todaySnapshot, content.weeklySummary)
+        NutritionSummaryCard(content.dailyNutrition)
+        FoodJournalCard(
+            foodLogs = content.todayFoodLogs,
+            formState = foodFormState,
+            submitState = foodSubmitState,
+            onMealTypeChange = onFoodMealTypeChange,
+            onDescriptionChange = onFoodDescriptionChange,
+            onCaloriesChange = onFoodCaloriesChange,
+            onProteinChange = onFoodProteinChange,
+            onCarbsChange = onFoodCarbsChange,
+            onFatChange = onFoodFatChange,
+            onSubmit = onFoodSubmit,
+        )
         Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun HealthConnectCard(
+    availability: HealthConnectAvailability,
+    syncState: UiState<String>,
+    onSync: () -> Unit,
+) {
+    DashboardCard(title = "HEALTH CONNECT", subtitle = "Pasos y calorias desde tu reloj") {
+        val message = when (availability) {
+            HealthConnectAvailability.Available -> "Listo para sincronizar la actividad de hoy."
+            HealthConnectAvailability.NotInstalled -> "Health Connect no esta instalado o no esta disponible."
+            HealthConnectAvailability.UpdateRequired -> "Actualiza Health Connect para poder sincronizar."
+        }
+        Text(message, color = TextMuted, fontSize = 13.sp)
+        Spacer(Modifier.height(12.dp))
+        GoldButton(
+            text = if (syncState is UiState.Loading) "Sincronizando..." else "Sincronizar actividad",
+            enabled = availability == HealthConnectAvailability.Available && syncState !is UiState.Loading,
+            loading = syncState is UiState.Loading,
+            onClick = onSync,
+        )
+        when (syncState) {
+            is UiState.Success -> {
+                Spacer(Modifier.height(10.dp))
+                InlineBanner(syncState.data, true)
+            }
+            is UiState.Error -> {
+                Spacer(Modifier.height(10.dp))
+                InlineBanner(syncState.message, false)
+            }
+            else -> Unit
+        }
     }
 }
 
@@ -264,12 +373,100 @@ private fun WeeklySummaryCard(summary: WeeklySummary) {
 private fun TodaySummarySection(today: TodaySnapshot, weeklySummary: WeeklySummary) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            MetricCard("Pasos hoy", today.steps.toString(), "objetivo diario", Success, Modifier.weight(1f))
-            MetricCard("Kcal hoy", today.caloriesBurned.toString(), "actividad", Info, Modifier.weight(1f))
+            MetricCard("Kcal hoy", today.consumedCalories.toInt().toString(), "consumidas", Gold, Modifier.weight(1f))
+            MetricCard("Prote hoy", today.consumedProteinG.toInt().toString(), "gramos", Success, Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MetricCard("Pasos hoy", today.steps.toString(), "actividad", Info, Modifier.weight(1f))
+            MetricCard("Restan", (today.remainingCalories ?: 0.0).toInt().toString(), "kcal objetivo", Gold, Modifier.weight(1f))
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MetricCard("Kcal activas", today.caloriesBurned.toString(), "registradas", Info, Modifier.weight(1f))
+            MetricCard("Peso", today.currentWeightKg?.toPrettyNumber()?.plus(" kg") ?: "--", "actual", Gold, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             MetricCard("Delta 7d", weeklySummary.weightDelta?.toPrettySigned() ?: "--", "peso", Gold, Modifier.weight(1f))
             MetricCard("Media", weeklySummary.avgSteps.toInt().toString(), "pasos/dia", Gold, Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun NutritionSummaryCard(summary: DailyNutritionSummaryDto) {
+    DashboardCard(title = "NUTRICION HOY", subtitle = "Consumo frente a objetivos") {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            MetricCard("Consumidas", summary.consumedCalories.toInt().toString(), "kcal", Gold, Modifier.weight(1f))
+            MetricCard("Netas", summary.netCalories.toInt().toString(), "kcal", Info, Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatPill("Prote", summary.consumedProteinG.toInt().toString(), Modifier.weight(1f))
+            StatPill("Carbs", summary.consumedCarbsG.toInt().toString(), Modifier.weight(1f))
+            StatPill("Grasa", summary.consumedFatG.toInt().toString(), Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun FoodJournalCard(
+    foodLogs: List<FoodLogDto>,
+    formState: FoodFormState,
+    submitState: UiState<Unit>,
+    onMealTypeChange: (String) -> Unit,
+    onDescriptionChange: (String) -> Unit,
+    onCaloriesChange: (String) -> Unit,
+    onProteinChange: (String) -> Unit,
+    onCarbsChange: (String) -> Unit,
+    onFatChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+) {
+    DashboardCard(title = "COMIDAS DE HOY", subtitle = "Registro manual rapido") {
+        ChoiceRow(
+            selected = formState.mealType,
+            options = listOf("breakfast" to "Des", "lunch" to "Com", "dinner" to "Cena", "snack" to "Snack", "other" to "Otro"),
+            onSelected = onMealTypeChange,
+        )
+        Spacer(Modifier.height(8.dp))
+        DashboardTextField("Descripcion", formState.description, onDescriptionChange)
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DashboardTextField("Kcal", formState.calories, onCaloriesChange, Modifier.weight(1f))
+            DashboardTextField("Prote", formState.proteinG, onProteinChange, Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            DashboardTextField("Carbs", formState.carbsG, onCarbsChange, Modifier.weight(1f))
+            DashboardTextField("Grasa", formState.fatG, onFatChange, Modifier.weight(1f))
+        }
+        Spacer(Modifier.height(12.dp))
+        GoldButton(
+            text = if (submitState is UiState.Loading) "Guardando..." else "Guardar comida",
+            enabled = submitState !is UiState.Loading && formState.canSubmit(),
+            loading = submitState is UiState.Loading,
+            onClick = onSubmit,
+        )
+        Spacer(Modifier.height(12.dp))
+        if (foodLogs.isEmpty()) {
+            EmptyState("Aun no has registrado comidas hoy.")
+        } else {
+            foodLogs.forEach { food ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Surface2, RoundedCornerShape(16.dp))
+                        .border(1.dp, Border, RoundedCornerShape(16.dp))
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(food.description, color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                        Text(food.mealType, color = TextMuted, fontSize = 11.sp)
+                    }
+                    Text("${food.calories.toInt()} kcal", color = Gold, fontWeight = FontWeight.Bold)
+                }
+                Spacer(Modifier.height(8.dp))
+            }
         }
     }
 }
@@ -332,6 +529,63 @@ private fun StatPill(label: String, value: String, modifier: Modifier = Modifier
 }
 
 @Composable
+private fun ChoiceRow(
+    selected: String,
+    options: List<Pair<String, String>>,
+    onSelected: (String) -> Unit,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        options.forEach { (value, label) ->
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(if (selected == value) Gold.copy(alpha = 0.14f) else Surface2, RoundedCornerShape(12.dp))
+                    .border(1.dp, if (selected == value) Gold else Border, RoundedCornerShape(12.dp))
+                    .clickable { onSelected(value) }
+                    .padding(vertical = 10.dp)
+            ) {
+                Text(
+                    text = label,
+                    color = if (selected == value) Gold else TextPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier.fillMaxWidth(),
+        singleLine = true,
+        label = { Text(label) },
+        shape = RoundedCornerShape(16.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Surface2,
+            unfocusedContainerColor = Surface2,
+            disabledContainerColor = Surface2,
+            focusedBorderColor = Gold,
+            unfocusedBorderColor = Border,
+            focusedTextColor = TextPrimary,
+            unfocusedTextColor = TextPrimary,
+            focusedLabelColor = Gold,
+            unfocusedLabelColor = TextMuted,
+            cursorColor = Gold,
+        ),
+    )
+}
+
+@Composable
 private fun InlineBanner(message: String, isSuccess: Boolean) {
     val accent = if (isSuccess) Success else MaterialTheme.colorScheme.error
     Box(
@@ -344,6 +598,11 @@ private fun InlineBanner(message: String, isSuccess: Boolean) {
         Text(message, color = accent, fontSize = 13.sp)
     }
 }
+
+private fun healthPermissions(): Set<String> = setOf(
+    HealthPermission.getReadPermission(StepsRecord::class),
+    HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class),
+)
 
 @Composable
 private fun EmptyState(message: String) {

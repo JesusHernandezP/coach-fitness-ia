@@ -4,9 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
-import com.fitnesscoach.profile.MetabolicProfileRepository;
 import com.fitnesscoach.user.User;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
@@ -23,8 +22,8 @@ class ChatServiceTest {
 
   @Mock ChatConversationRepository conversationRepo;
   @Mock ChatMessageRepository messageRepo;
-  @Mock MetabolicProfileRepository profileRepo;
-  @Mock GroqClient groqClient;
+  @Mock PendingAiActionRepository pendingAiActionRepository;
+  @Mock AiCoachService aiCoachService;
 
   @InjectMocks ChatService chatService;
 
@@ -70,10 +69,14 @@ class ChatServiceTest {
 
     when(messageRepo.countByConversationUserIdAndCreatedAtAfter(eq(1L), any())).thenReturn(0L);
     when(conversationRepo.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(conv));
-    when(profileRepo.findByUserId(1L)).thenReturn(Optional.empty());
     when(messageRepo.save(any())).thenReturn(userMsg).thenReturn(assistantMsg);
     when(messageRepo.findByConversationIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
-    when(groqClient.complete(any())).thenReturn("Hola! Como puedo ayudarte?");
+    when(
+            pendingAiActionRepository.countByUserIdAndConversationIdAndStatusAndExpiresAtAfter(
+                eq(1L), eq(1L), eq(PendingAiActionStatus.pending), any()))
+        .thenReturn(0L);
+    when(aiCoachService.answer(eq(1L), eq(conv), eq("hola"), any(), eq(false)))
+        .thenReturn("Hola! Como puedo ayudarte?");
 
     MessageResponse res = chatService.sendMessage(1L, 1L, new ChatRequest("hola"));
 

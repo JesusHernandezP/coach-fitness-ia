@@ -19,6 +19,7 @@ junitExt             = "1.2.1"
 espressoCore         = "3.6.1"
 mockitoKotlin        = "5.4.0"
 coroutinesTest       = "1.8.1"
+healthConnect       = "1.0.0-alpha11"
 
 [libraries]
 # Core
@@ -56,6 +57,7 @@ datastore-preferences        = { group = "androidx.datastore",       name = "dat
 
 # Vico charts
 vico-compose-m3              = { group = "com.patrykandpatrick.vico", name = "compose-m3",                  version.ref = "vico" }
+androidx-health-connect      = { group = "androidx.health.connect",   name = "connect-client",              version.ref = "healthConnect" }
 
 # Test
 junit                        = { group = "junit",                    name = "junit",                        version.ref = "junit" }

@@ -90,13 +90,13 @@ dependencies {
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.okhttp.logging)
     implementation(libs.moshi.kotlin)
-    ksp(libs.moshi.kotlin.codegen)
 
     // DataStore
     implementation(libs.datastore.preferences)
 
     // Vico charts
     implementation(libs.vico.compose.m3)
+    implementation(libs.androidx.health.connect)
 
     // Debug
     debugImplementation(libs.androidx.ui.tooling)

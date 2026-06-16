@@ -1,6 +1,7 @@
 package com.fitnesscoach.activity;
 
 import com.fitnesscoach.user.User;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class ActivityLogService {
     if (req.steps() != null) log.setSteps(req.steps());
     if (req.caloriesBurned() != null) log.setCaloriesBurned(req.caloriesBurned());
     if (req.notes() != null) log.setNotes(req.notes());
+    if (log.getSource() == null) log.setSource("manual");
 
     return ActivityLogResponse.from(activityRepo.save(log));
   }
@@ -41,6 +43,21 @@ public class ActivityLogService {
     return activityRepo
         .findByUserIdAndDate(userId, LocalDate.now())
         .map(ActivityLogResponse::from)
-        .orElse(new ActivityLogResponse(null, LocalDate.now(), 0, 0, null));
+        .orElse(new ActivityLogResponse(null, LocalDate.now(), 0, 0, null, null, null));
+  }
+
+  @Transactional
+  public ActivityLogResponse upsertHealthSync(User user, DailyHealthSyncRequest req) {
+    ActivityLog log =
+        activityRepo
+            .findByUserIdAndDate(user.getId(), req.date())
+            .orElse(ActivityLog.builder().user(user).date(req.date()).build());
+
+    log.setSteps(req.steps());
+    log.setCaloriesBurned(req.caloriesBurned());
+    log.setSource(req.source());
+    log.setSyncedAt(Instant.now());
+
+    return ActivityLogResponse.from(activityRepo.save(log));
   }
 }

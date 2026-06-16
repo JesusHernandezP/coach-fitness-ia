@@ -31,9 +31,36 @@ public class DashboardController {
     return dashboardService.weeklySummary(user.getId());
   }
 
+  @GetMapping("/weekly-kpis")
+  @Operation(summary = "KPIs semanales agregados de nutricion, actividad y peso")
+  public WeeklyKpisSnapshot weeklyKpis(@AuthenticationPrincipal User user) {
+    return dashboardService.weeklyKpis(user.getId());
+  }
+
   @GetMapping("/today")
   @Operation(summary = "Snapshot del dia actual")
   public TodaySnapshot today(@AuthenticationPrincipal User user) {
     return dashboardService.today(user.getId());
+  }
+
+  @GetMapping("/nutrition-trend")
+  @Operation(summary = "Tendencia diaria de calorias y proteina frente a objetivo")
+  public List<NutritionTrendPoint> nutritionTrend(
+      @AuthenticationPrincipal User user, @RequestParam(defaultValue = "30") int days) {
+    return dashboardService.nutritionTrend(user.getId(), days);
+  }
+
+  @GetMapping("/activity-trend")
+  @Operation(summary = "Tendencia diaria de pasos y calorias activas")
+  public List<ActivityTrendPoint> activityTrend(
+      @AuthenticationPrincipal User user, @RequestParam(defaultValue = "30") int days) {
+    return dashboardService.activityTrend(user.getId(), days);
+  }
+
+  @GetMapping("/adherence")
+  @Operation(summary = "Adherencia calorica diaria frente al objetivo")
+  public List<AdherencePoint> adherence(
+      @AuthenticationPrincipal User user, @RequestParam(defaultValue = "30") int days) {
+    return dashboardService.adherence(user.getId(), days);
   }
 }

@@ -1,8 +1,13 @@
 package com.fitnessaicoach.app.ui.screens.dashboard
 
+import com.fitnessaicoach.app.data.health.HealthConnectAvailability
+import com.fitnessaicoach.app.data.health.HealthConnectDailyActivity
+import com.fitnessaicoach.app.data.health.HealthConnectSyncManager
 import com.fitnessaicoach.app.data.network.TodaySnapshot
 import com.fitnessaicoach.app.data.network.WeightPoint
 import com.fitnessaicoach.app.data.network.WeeklySummary
+import com.fitnessaicoach.app.data.network.DailyNutritionSummaryDto
+import com.fitnessaicoach.app.data.network.ActivityLogRequest
 import com.fitnessaicoach.app.data.repository.DashboardRepository
 import com.fitnessaicoach.app.ui.MainDispatcherRule
 import com.fitnessaicoach.app.ui.common.UiState
@@ -25,10 +30,13 @@ class DashboardViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var repo: DashboardRepository
+    private lateinit var healthConnectSyncManager: HealthConnectSyncManager
 
     @Before
     fun setup() {
         repo = mock()
+        healthConnectSyncManager = mock()
+        whenever(healthConnectSyncManager.availability()).thenReturn(HealthConnectAvailability.Available)
     }
 
     @Test
@@ -45,17 +53,41 @@ class DashboardViewModelTest {
             weightDelta = -0.7,
         )
         val todaySnapshot = TodaySnapshot(
+            targetCalories = 2360.0,
+            consumedCalories = 1280.0,
+            remainingCalories = 1080.0,
+            targetProteinG = 160.0,
+            consumedProteinG = 92.0,
+            remainingProteinG = 68.0,
             steps = 8123,
             caloriesBurned = 410,
             currentWeightKg = 81.7,
+        )
+        val nutrition = DailyNutritionSummaryDto(
+            date = "2026-04-18",
             targetCalories = 2360.0,
+            consumedCalories = 1280.0,
+            remainingCalories = 1080.0,
+            targetProteinG = 160.0,
+            consumedProteinG = 92.0,
+            remainingProteinG = 68.0,
+            targetCarbsG = 286.0,
+            consumedCarbsG = 140.0,
+            remainingCarbsG = 146.0,
+            targetFatG = 64.0,
+            consumedFatG = 41.0,
+            remainingFatG = 23.0,
+            activityCaloriesBurned = 430,
+            netCalories = 850.0,
         )
 
         whenever(repo.weightProgress()).thenReturn(Result.success(points))
         whenever(repo.weeklySummary()).thenReturn(Result.success(weeklySummary))
         whenever(repo.today()).thenReturn(Result.success(todaySnapshot))
+        whenever(repo.todayNutrition()).thenReturn(Result.success(nutrition))
+        whenever(repo.todayFoodLogs()).thenReturn(Result.success(emptyList()))
 
-        val viewModel = DashboardViewModel(repo) { "2026-04-18" }
+        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
         viewModel.loadDashboard()
         advanceUntilIdle()
 
@@ -65,6 +97,8 @@ class DashboardViewModelTest {
                     weightProgress = points,
                     weeklySummary = weeklySummary,
                     todaySnapshot = todaySnapshot,
+                    dailyNutrition = nutrition,
+                    todayFoodLogs = emptyList(),
                 ),
             ),
             viewModel.dashboardState.value,
@@ -89,16 +123,26 @@ class DashboardViewModelTest {
             weightDelta = -0.5,
         )
         val initialTodaySnapshot = TodaySnapshot(
+            targetCalories = null,
+            consumedCalories = 0.0,
+            remainingCalories = null,
+            targetProteinG = null,
+            consumedProteinG = 0.0,
+            remainingProteinG = null,
             steps = 0,
             caloriesBurned = 0,
             currentWeightKg = null,
-            targetCalories = null,
         )
         val updatedTodaySnapshot = TodaySnapshot(
+            targetCalories = null,
+            consumedCalories = 0.0,
+            remainingCalories = null,
+            targetProteinG = null,
+            consumedProteinG = 0.0,
+            remainingProteinG = null,
             steps = 7000,
             caloriesBurned = 350,
             currentWeightKg = null,
-            targetCalories = null,
         )
         whenever(repo.weightProgress()).thenReturn(Result.success(emptyList()))
         whenever(repo.weeklySummary())
@@ -107,6 +151,28 @@ class DashboardViewModelTest {
         whenever(repo.today())
             .thenReturn(Result.success(initialTodaySnapshot))
             .thenReturn(Result.success(updatedTodaySnapshot))
+        whenever(repo.todayNutrition()).thenReturn(
+            Result.success(
+                DailyNutritionSummaryDto(
+                    date = "2026-04-18",
+                    targetCalories = null,
+                    consumedCalories = 0.0,
+                    remainingCalories = null,
+                    targetProteinG = null,
+                    consumedProteinG = 0.0,
+                    remainingProteinG = null,
+                    targetCarbsG = null,
+                    consumedCarbsG = 0.0,
+                    remainingCarbsG = null,
+                    targetFatG = null,
+                    consumedFatG = 0.0,
+                    remainingFatG = null,
+                    activityCaloriesBurned = 0,
+                    netCalories = 0.0,
+                ),
+            ),
+        )
+        whenever(repo.todayFoodLogs()).thenReturn(Result.success(emptyList()))
         whenever(
             repo.logActivity(
                 date = "2026-04-18",
@@ -116,7 +182,7 @@ class DashboardViewModelTest {
             ),
         ).thenReturn(Result.success(Unit))
 
-        val viewModel = DashboardViewModel(repo) { "2026-04-18" }
+        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
         viewModel.loadDashboard()
         advanceUntilIdle()
 
@@ -144,13 +210,114 @@ class DashboardViewModelTest {
     fun `loadDashboard exposes error when repository fails`() = runTest {
         whenever(repo.weightProgress()).thenReturn(Result.failure(RuntimeException("sin red")))
         whenever(repo.weeklySummary()).thenReturn(Result.success(WeeklySummary(0, 0, 0, 0.0, null)))
-        whenever(repo.today()).thenReturn(Result.success(TodaySnapshot(0, 0, null, null)))
+        whenever(repo.today()).thenReturn(
+            Result.success(
+                TodaySnapshot(
+                    targetCalories = null,
+                    consumedCalories = 0.0,
+                    remainingCalories = null,
+                    targetProteinG = null,
+                    consumedProteinG = 0.0,
+                    remainingProteinG = null,
+                    steps = 0,
+                    caloriesBurned = 0,
+                    currentWeightKg = null,
+                ),
+            ),
+        )
+        whenever(repo.todayNutrition()).thenReturn(
+            Result.success(
+                DailyNutritionSummaryDto(
+                    date = "2026-04-18",
+                    targetCalories = null,
+                    consumedCalories = 0.0,
+                    remainingCalories = null,
+                    targetProteinG = null,
+                    consumedProteinG = 0.0,
+                    remainingProteinG = null,
+                    targetCarbsG = null,
+                    consumedCarbsG = 0.0,
+                    remainingCarbsG = null,
+                    targetFatG = null,
+                    consumedFatG = 0.0,
+                    remainingFatG = null,
+                    activityCaloriesBurned = 0,
+                    netCalories = 0.0,
+                ),
+            ),
+        )
+        whenever(repo.todayFoodLogs()).thenReturn(Result.success(emptyList()))
 
-        val viewModel = DashboardViewModel(repo) { "2026-04-18" }
+        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
         viewModel.loadDashboard()
         advanceUntilIdle()
 
         assertEquals(UiState.Error("sin red"), viewModel.dashboardState.value)
         assertTrue(viewModel.submitState.value is UiState.Idle)
+    }
+
+    @Test
+    fun `syncTodayFromHealthConnect uploads activity and refreshes dashboard`() = runTest {
+        val activity = HealthConnectDailyActivity("2026-04-18", 8500, 430)
+        whenever(healthConnectSyncManager.readTodayActivity()).thenReturn(Result.success(activity))
+        whenever(repo.syncDailyActivity(activity)).thenReturn(
+            Result.success(
+                ActivityLogRequest(
+                    date = "2026-04-18",
+                    steps = 8500,
+                    caloriesBurned = 430,
+                    source = "health_connect",
+                ),
+            ),
+        )
+        whenever(repo.weightProgress()).thenReturn(Result.success(emptyList()))
+        whenever(repo.weeklySummary()).thenReturn(Result.success(WeeklySummary(0, 0, 0, 0.0, null)))
+        whenever(repo.today()).thenReturn(
+            Result.success(
+                TodaySnapshot(
+                    targetCalories = null,
+                    consumedCalories = 0.0,
+                    remainingCalories = null,
+                    targetProteinG = null,
+                    consumedProteinG = 0.0,
+                    remainingProteinG = null,
+                    steps = 8500,
+                    caloriesBurned = 430,
+                    currentWeightKg = null,
+                ),
+            ),
+        )
+        whenever(repo.todayNutrition()).thenReturn(
+            Result.success(
+                DailyNutritionSummaryDto(
+                    date = "2026-04-18",
+                    targetCalories = null,
+                    consumedCalories = 0.0,
+                    remainingCalories = null,
+                    targetProteinG = null,
+                    consumedProteinG = 0.0,
+                    remainingProteinG = null,
+                    targetCarbsG = null,
+                    consumedCarbsG = 0.0,
+                    remainingCarbsG = null,
+                    targetFatG = null,
+                    consumedFatG = 0.0,
+                    remainingFatG = null,
+                    activityCaloriesBurned = 430,
+                    netCalories = 0.0,
+                ),
+            ),
+        )
+        whenever(repo.todayFoodLogs()).thenReturn(Result.success(emptyList()))
+
+        val viewModel = DashboardViewModel(repo, healthConnectSyncManager) { "2026-04-18" }
+        viewModel.syncTodayFromHealthConnect()
+        advanceUntilIdle()
+
+        verify(repo).syncDailyActivity(activity)
+        assertEquals(
+            UiState.Success("Actividad sincronizada: 8500 pasos y 430 kcal."),
+            viewModel.healthSyncState.value,
+        )
     }
 }

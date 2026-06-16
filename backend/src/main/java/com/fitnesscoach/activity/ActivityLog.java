@@ -2,6 +2,7 @@ package com.fitnesscoach.activity;
 
 import com.fitnesscoach.user.User;
 import jakarta.persistence.*;
+import java.time.Instant;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -35,4 +36,9 @@ public class ActivityLog {
   private Integer caloriesBurned;
 
   private String notes;
+
+  private String source;
+
+  @Column(name = "synced_at")
+  private Instant syncedAt;
 }
