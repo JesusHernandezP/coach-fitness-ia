@@ -25,16 +25,21 @@ public class RagService {
   }
 
   public String buildContext(Long userId, String query) {
-    List<AiMemory> memories = retrieveRelevant(userId, query, 3).stream()
-        .filter(memory -> cosineSimilarity(embeddingClient.embed(query), parseVector(memory.embedding())) > 0.12)
-        .toList();
+    List<AiMemory> memories =
+        retrieveRelevant(userId, query, 3).stream()
+            .filter(
+                memory ->
+                    cosineSimilarity(embeddingClient.embed(query), parseVector(memory.embedding()))
+                        > 0.12)
+            .toList();
     if (memories.isEmpty()) {
       return "";
     }
 
     StringBuilder context = new StringBuilder("Memorias relevantes: ");
     for (AiMemory memory : memories) {
-      context.append('[')
+      context
+          .append('[')
           .append(memory.type().name().toLowerCase(Locale.ROOT))
           .append("] ")
           .append(memory.content())

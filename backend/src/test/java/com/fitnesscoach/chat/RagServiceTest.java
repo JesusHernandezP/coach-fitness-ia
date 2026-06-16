@@ -25,8 +25,16 @@ class RagServiceTest {
     when(aiMemoryService.listForUser(1L))
         .thenReturn(
             List.of(
-                new AiMemory(1L, 1L, AiMemoryType.restriction, "Sin lactosa", "[1.0,0.0]", 5, Instant.now()),
-                new AiMemory(2L, 1L, AiMemoryType.preference, "Me gusta correr", "[0.0,1.0]", 3, Instant.now())));
+                new AiMemory(
+                    1L, 1L, AiMemoryType.restriction, "Sin lactosa", "[1.0,0.0]", 5, Instant.now()),
+                new AiMemory(
+                    2L,
+                    1L,
+                    AiMemoryType.preference,
+                    "Me gusta correr",
+                    "[0.0,1.0]",
+                    3,
+                    Instant.now())));
 
     List<AiMemory> memories = ragService.retrieveRelevant(1L, "quiero desayunos sin lactosa", 1);
 

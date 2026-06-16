@@ -33,7 +33,8 @@ public class AiContextService {
     }
 
     var profile = profileOpt.get();
-    prompt.append("Perfil: ")
+    prompt
+        .append("Perfil: ")
         .append(profile.getSex())
         .append(", ")
         .append(profile.getAge())
@@ -47,13 +48,17 @@ public class AiContextService {
         .append(profile.getDietType())
         .append(". ");
 
-    targetRepository.findByUserId(userId)
+    targetRepository
+        .findByUserId(userId)
         .ifPresent(
             target ->
                 prompt.append(
                     String.format(
                         "Objetivos diarios: %.0f kcal, %.0f g proteina, %.0f g carbs, %.0f g grasa. ",
-                        target.getCalories(), target.getProteinG(), target.getCarbsG(), target.getFatG())));
+                        target.getCalories(),
+                        target.getProteinG(),
+                        target.getCarbsG(),
+                        target.getFatG())));
 
     DailyNutritionSummary today = foodLogService.todaySummary(userId);
     prompt.append(
@@ -65,14 +70,16 @@ public class AiContextService {
             today.consumedFatG(),
             today.netCalories()));
 
-    var todayFoods = foodLogRepository.findByUserIdAndDateOrderByCreatedAtAsc(userId, LocalDate.now());
+    var todayFoods =
+        foodLogRepository.findByUserIdAndDateOrderByCreatedAtAsc(userId, LocalDate.now());
     if (!todayFoods.isEmpty()) {
       prompt.append("Comidas de hoy: ");
       todayFoods.stream()
           .limit(5)
           .forEach(
               log ->
-                  prompt.append(log.getMealType())
+                  prompt
+                      .append(log.getMealType())
                       .append(": ")
                       .append(log.getDescription())
                       .append(" (")
@@ -94,8 +101,7 @@ public class AiContextService {
         .findLatestByUserId(userId)
         .ifPresent(
             weight ->
-                prompt.append(
-                    String.format("Peso mas reciente: %.1f kg. ", weight.getWeightKg())));
+                prompt.append(String.format("Peso mas reciente: %.1f kg. ", weight.getWeightKg())));
 
     String ragContext = ragService.buildContext(userId, userText);
     if (!ragContext.isBlank()) {

@@ -31,13 +31,17 @@ public class FoodLogService {
   public List<FoodLogResponse> list(Long userId, LocalDate from, LocalDate to) {
     LocalDate resolvedFrom = from != null ? from : LocalDate.now().minusDays(30);
     LocalDate resolvedTo = to != null ? to : LocalDate.now();
-    return foodLogRepository.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(userId, resolvedFrom, resolvedTo).stream()
+    return foodLogRepository
+        .findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(userId, resolvedFrom, resolvedTo)
+        .stream()
         .map(FoodLogResponse::from)
         .toList();
   }
 
   public List<FoodLogResponse> listToday(Long userId) {
-    return foodLogRepository.findByUserIdAndDateOrderByCreatedAtAsc(userId, LocalDate.now()).stream()
+    return foodLogRepository
+        .findByUserIdAndDateOrderByCreatedAtAsc(userId, LocalDate.now())
+        .stream()
         .map(FoodLogResponse::from)
         .toList();
   }
@@ -62,7 +66,9 @@ public class FoodLogService {
     LocalDate today = LocalDate.now();
     LocalDate from = today.minusDays(6);
     Map<LocalDate, List<FoodLog>> logsByDate =
-        foodLogRepository.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(userId, from, today).stream()
+        foodLogRepository
+            .findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(userId, from, today)
+            .stream()
             .collect(Collectors.groupingBy(FoodLog::getDate));
 
     List<DailyNutritionSummary> days =
@@ -91,7 +97,10 @@ public class FoodLogService {
     Double targetFat = target != null ? target.getFatG() : null;
 
     int activityCalories =
-        activityLogRepository.findByUserIdAndDate(userId, date).map(log -> zero(log.getCaloriesBurned())).orElse(0);
+        activityLogRepository
+            .findByUserIdAndDate(userId, date)
+            .map(log -> zero(log.getCaloriesBurned()))
+            .orElse(0);
 
     return new DailyNutritionSummary(
         date,
@@ -130,7 +139,11 @@ public class FoodLogService {
   }
 
   private double sum(List<FoodLog> logs, java.util.function.Function<FoodLog, Double> extractor) {
-    return logs.stream().map(extractor).filter(v -> v != null).mapToDouble(Double::doubleValue).sum();
+    return logs.stream()
+        .map(extractor)
+        .filter(v -> v != null)
+        .mapToDouble(Double::doubleValue)
+        .sum();
   }
 
   private Double remaining(Double target, double consumed) {

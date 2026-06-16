@@ -40,13 +40,15 @@ public class AiCoachService {
     }
 
     if (isPendingRejection(normalized) && hasPendingAction) {
-      PendingAiAction action = pendingAiActionService.findActivePending(userId, conversation.getId());
+      PendingAiAction action =
+          pendingAiActionService.findActivePending(userId, conversation.getId());
       pendingAiActionService.reject(action);
       return "Entendido. No registro esa comida. Si quieres, dame una version corregida y la vuelvo a estimar.";
     }
 
     if (isPendingConfirmation(normalized) && hasPendingAction) {
-      PendingAiAction action = pendingAiActionService.findActivePending(userId, conversation.getId());
+      PendingAiAction action =
+          pendingAiActionService.findActivePending(userId, conversation.getId());
       FoodLogResponse saved = pendingAiActionService.confirmFoodLog(action);
       DailyNutritionSummary summary = foodLogService.todaySummary(userId);
       return String.format(
@@ -103,7 +105,9 @@ public class AiCoachService {
   }
 
   boolean isPendingRejection(String text) {
-    return text.contains("descarta") || text.contains("no la registres") || text.contains("olvidalo");
+    return text.contains("descarta")
+        || text.contains("no la registres")
+        || text.contains("olvidalo");
   }
 
   boolean looksLikeMealLog(String text) {

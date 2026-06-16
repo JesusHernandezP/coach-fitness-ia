@@ -71,9 +71,8 @@ class ChatServiceTest {
     when(conversationRepo.findByIdAndUserId(1L, 1L)).thenReturn(Optional.of(conv));
     when(messageRepo.save(any())).thenReturn(userMsg).thenReturn(assistantMsg);
     when(messageRepo.findByConversationIdOrderByCreatedAtAsc(1L)).thenReturn(List.of());
-    when(
-            pendingAiActionRepository.countByUserIdAndConversationIdAndStatusAndExpiresAtAfter(
-                eq(1L), eq(1L), eq(PendingAiActionStatus.pending), any()))
+    when(pendingAiActionRepository.countByUserIdAndConversationIdAndStatusAndExpiresAtAfter(
+            eq(1L), eq(1L), eq(PendingAiActionStatus.pending), any()))
         .thenReturn(0L);
     when(aiCoachService.answer(eq(1L), eq(conv), eq("hola"), any(), eq(false)))
         .thenReturn("Hola! Como puedo ayudarte?");

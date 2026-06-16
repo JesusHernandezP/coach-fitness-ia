@@ -98,12 +98,10 @@ class DashboardServiceTest {
     when(activityRepo.findByUserIdAndDate(eq(1L), any()))
         .thenReturn(Optional.of(activityLog(7200, 380)));
     when(foodLogRepo.findByUserIdAndDateOrderByCreatedAtAsc(eq(1L), any()))
-        .thenReturn(
-            List.of(
-                foodLog(LocalDate.now(), 600, 40),
-                foodLog(LocalDate.now(), 850, 55)));
+        .thenReturn(List.of(foodLog(LocalDate.now(), 600, 40), foodLog(LocalDate.now(), 850, 55)));
     when(targetRepo.findByUserId(1L))
-        .thenReturn(Optional.of(NutritionTarget.builder().calories(2360.0).proteinG(160.0).build()));
+        .thenReturn(
+            Optional.of(NutritionTarget.builder().calories(2360.0).proteinG(160.0).build()));
 
     TodaySnapshot snap = dashboardService.today(1L);
 
@@ -122,12 +120,17 @@ class DashboardServiceTest {
     LocalDate today = LocalDate.now();
     LocalDate weekAgo = today.minusDays(6);
     when(targetRepo.findByUserId(1L))
-        .thenReturn(Optional.of(NutritionTarget.builder().calories(2000.0).proteinG(150.0).build()));
+        .thenReturn(
+            Optional.of(NutritionTarget.builder().calories(2000.0).proteinG(150.0).build()));
     when(activityRepo.findByUserIdAndDateBetweenOrderByDateAsc(eq(1L), any(), any()))
         .thenReturn(
             List.of(
                 ActivityLog.builder().date(weekAgo).steps(8000).caloriesBurned(300).build(),
-                ActivityLog.builder().date(weekAgo.plusDays(1)).steps(6000).caloriesBurned(250).build(),
+                ActivityLog.builder()
+                    .date(weekAgo.plusDays(1))
+                    .steps(6000)
+                    .caloriesBurned(250)
+                    .build(),
                 ActivityLog.builder().date(today).steps(10000).caloriesBurned(450).build()));
     when(foodLogRepo.findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(eq(1L), any(), any()))
         .thenReturn(

@@ -7,7 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FoodLogRepository extends JpaRepository<FoodLog, Long> {
 
-  List<FoodLog> findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(Long userId, LocalDate from, LocalDate to);
+  List<FoodLog> findByUserIdAndDateBetweenOrderByDateAscCreatedAtAsc(
+      Long userId, LocalDate from, LocalDate to);
 
   List<FoodLog> findByUserIdAndDateOrderByCreatedAtAsc(Long userId, LocalDate date);
 
